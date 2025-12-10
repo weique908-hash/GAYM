@@ -23,7 +23,7 @@
       overflow-x: hidden;
       -webkit-tap-highlight-color: transparent;
       opacity: 1 !important;
-      padding-top: 80px; /* 预留成就弹窗位置，避免遮挡 */
+      padding-top: 80px; /* 预留成就弹窗位置 */
     }
     /* 顶部成就弹窗核心样式 - 手机端悬浮适配 */
     .achievement-popup {
@@ -428,10 +428,10 @@
   <!-- 顶部成就弹窗 - 核心新增 -->
   <div class="achievement-popup" id="achievementPopup">✅ 解锁成就：<span id="popupAchievementName"></span></div>
 
-  <!-- 音频标签：文件名完全匹配你的文件，无需修改 -->
-  <audio id="bgmGame" src="在虚无中永存 - 清醒梦.flac" loop preload="auto" style="display: none;">
-  <audio id="bgmAd1" src="Bright_Purity（新世界狂欢）(伴奏)-林一川-224894844.mp3" preload="auto" style="display: none;">
-  <audio id="bgmAd2" src="月光狂想曲-吉他-69002.mp3" preload="auto" style="display: none;">
+  <!-- 音频标签：替换为新命名的音频文件 -->
+  <audio id="bgmGame" src="清醒梦.mp3" loop preload="auto" style="display: none;">
+  <audio id="bgmAd1" src="Bright.mp3" preload="auto" style="display: none;">
+  <audio id="bgmAd2" src="月光狂想曲.mp3" preload="auto" style="display: none;">
 
   <!-- 游戏主容器 -->
   <div class="game-container">
@@ -486,7 +486,6 @@
   <div class="modal-overlay hidden-cls" id="adConfirmModal">
     <div class="modal-container">
       <h3 class="modal-title">不进来看看吗？</h3>
-？</h3>
       <div class="modal-btn-group">
         <button class="modal-btn btn-primary" id="adConfirmBtn">好吧，来了❤️</button>
         <button class="modal-btn btn-secondary" id="adCancelBtn">呃↓，我是直男</button>
@@ -683,11 +682,10 @@
       return selectedQ;
     }
 
-    // 核心修改：成就解锁改为顶部弹窗显示
+    // 核心：成就解锁顶部弹窗显示
     function showAchievementPopup(achievementName) {
       el.popupAchievementName.textContent = achievementName;
       el.achievementPopup.classList.add('show');
-      // 2秒后自动隐藏弹窗
       setTimeout(() => {
         el.achievementPopup.classList.remove('show');
       }, 2000);
@@ -699,7 +697,6 @@
       localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(gameState.unlockedAchievements)));
       renderAchievementWall();
       const achievement = CONFIG.achievements[achievementId];
-      // 调用弹窗函数，不再使用底部messageBox
       showAchievementPopup(achievement.name);
     }
 
@@ -1069,7 +1066,7 @@
         triggeredScorePopups: new Set(),
         adImgRecord: { original: { lastImg: '', repeatCount: 0 }, new: { lastImg: '', repeatCount: 0 } },
         questionRecord: { lastId: -1, repeatCount: 0 },
-        positionRecord: { lastPos: -1, repeatCount: 0 }
+        positionRecord: { lastPos: -1, repeatCount: 00 }
       };
       el.scoreNum.textContent = '0';
       el.timerNum.textContent = '--';
