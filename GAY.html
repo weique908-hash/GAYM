@@ -34,7 +34,7 @@
     .popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card);border-radius:12px;padding:24px;border:2px solid var(--accent);z-index:1000;animation:popup 0.3s ease-in-out;display:none;width:85%;max-width:350px;text-align:center}
     .popup.show{display:block}
     @keyframes popup{0%{opacity:0;transform:translate(-50%,-60%) scale(0.9)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-    /* 分数里程碑弹窗 */
+    /* 分数里程碑弹窗（50分/100分） */
     .score-popup .popup-icon{font-size:32px;margin-bottom:12px;color:var(--accent)}
     .score-popup h3{font-size:20px;margin:0 0 8px;color:var(--accent)}
     .score-popup p{font-size:14px;margin:0 0 16px;color:var(--muted)}
@@ -228,8 +228,7 @@
       </div>
     </div>
   </div>
-
-  <script>
+<script>
     window.onload = function() {
       const CONFIG = {
         images: ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg"],
@@ -404,9 +403,9 @@
       // 统计数据
       let correctCount = 0;
       let wrongCount = 0;
-      // 连续选择计数（用于新成就）
-      let consecutiveImg1Count = 0; // 连续选img1.jpg次数
-      let consecutiveNotImg3Count = 0; // 连续不选img3.jpg次数
+      // 连续选择计数（用于新成就，按索引判断）
+      let consecutiveImg1Count = 0; // 连续选img1.jpg（索引0）次数
+      let consecutiveNotImg3Count = 0; // 连续不选img3.jpg（索引2）次数
       // 成就状态（从本地存储读取，重置游戏不消失）
       let unlockedAchievements = new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []);
       let triggeredScorePopups = new Set(); // 已触发的分数弹窗集合
@@ -415,7 +414,7 @@
       function initAchievementWall() {
         achievementList.innerHTML = '';
         Object.entries(ACHIEVEMENTS).forEach(([id, achievement]) => {
-          // 跳过隐藏成就
+          // 跳过隐藏成就（omg），彻底不显示在成就墙
           if (achievement.hidden) return;
           const isUnlocked = unlockedAchievements.has(id);
           const achievementItem = document.createElement('div');
@@ -489,7 +488,7 @@
           achievementDesc.textContent = achievement.desc;
           achievementMsg.textContent = achievement.msg;
           showPopup(achievementPopup);
-          // 更新成就墙
+          // 更新成就墙（隐藏成就不会被添加）
           initAchievementWall();
         }
       }
@@ -514,7 +513,7 @@
         return { arr: newArr, indexes };
       }
 
-      // 渲染游戏网格
+      // 渲染游戏网格（按索引判断，移除imgSrc传入）
       function renderGrid() {
         gridEl.innerHTML = '';
         const { arr: shuffledImgs, indexes: originalIndexes } = shuffleArr(CONFIG.images);
@@ -526,12 +525,12 @@
           img.src = imgSrc;
           img.alt = `角色${i+1}`;
           cell.appendChild(img);
-          // 手机端触摸优先
+          // 手机端触摸优先，仅传cell
           cell.ontouchend = (e) => {
             e.preventDefault();
-            handleCellClick(cell, imgSrc); // 传入图片路径用于成就判断
+            handleCellClick(cell);
           };
-          cell.onclick = () => handleCellClick(cell, imgSrc);
+          cell.onclick = () => handleCellClick(cell);
           gridEl.appendChild(cell);
         });
       }
@@ -557,7 +556,7 @@
             playable = false;
             wrongCount++;
             showMessage('杂鱼 慢死了', 'lose');
-            // 连续选择计数重置
+            // 重置连续选择计数
             consecutiveImg1Count = 0;
             consecutiveNotImg3Count = 0;
             setTimeout(() => gameActive && startRound(), 1000);
@@ -565,59 +564,70 @@
         }, 1000);
       }
 
-      // 处理单元格点击（新增图片判断，用于新成就）
-      function handleCellClick(cell, selectedImg) {
+      // 处理单元格点击（修复成就触发+满分提示）
+      function handleCellClick(cell) {
         if (!playable) return;
         playable = false;
         clearInterval(timer);
         const originalIdx = Number(cell.getAttribute('data-original-idx'));
         const res = currentQuestion.onSelect ? currentQuestion.onSelect(originalIdx) : null;
 
-        // 新成就判断：连续选择计数
-        if (selectedImg === 'img1.jpg') {
+        // ========== 修复：按索引判断成就触发，独立统计 ==========
+        // 强人所难♂：仅选img1.jpg（索引0）累加，选其他重置
+        if (originalIdx === 0) {
           consecutiveImg1Count++;
-          consecutiveNotImg3Count++; // 选了img1也属于不选img3
-        } else if (selectedImg === 'img3.jpg') {
-          consecutiveImg1Count = 0;
-          consecutiveNotImg3Count = 0;
         } else {
           consecutiveImg1Count = 0;
-          consecutiveNotImg3Count++;
         }
 
-        // 解锁新成就
+        // 好像忘了谁...：仅选非img3.jpg（索引2）累加，选img3重置
+        if (originalIdx !== 2) {
+          consecutiveNotImg3Count++;
+        } else {
+          consecutiveNotImg3Count = 0;
+        }
+
+        // 解锁成就（触发后重置计数，避免重复）
         if (consecutiveImg1Count >= 4) {
-          unlockAchievement('forceful'); // 强人所难♂
-          consecutiveImg1Count = 0; // 重置计数，避免重复触发
+          unlockAchievement('forceful');
+          consecutiveImg1Count = 0;
         }
         if (consecutiveNotImg3Count >= 4) {
-          unlockAchievement('forgotWho'); // 好像忘了谁...
-          consecutiveNotImg3Count = 0; // 重置计数，避免重复触发
+          unlockAchievement('forgotWho');
+          consecutiveNotImg3Count = 0;
         }
+        // =======================================================
+
+        // ========== 修复：满分后所有选项都显示极限提示 ==========
+        if (score >= CONFIG.maxScore) {
+          showMessage('已经...极限了♂♂♂', 'limit');
+          // 弹窗显示时不自动进入下一轮
+          if (!scorePopup.classList.contains('show') && !achievementPopup.classList.contains('show') && !endGameConfirmPopup.classList.contains('show')) {
+            setTimeout(() => gameActive && startRound(), 1000);
+          }
+          return; // 直接返回，不再执行后续分数逻辑
+        }
+        // =======================================================
 
         if (currentQuestion.type === 'single') {
           if (originalIdx === currentQuestion.correctIdx) {
             correctCount++;
-            if (score < CONFIG.maxScore) {
-              score += CONFIG.pointsPerCorrect;
-              if (score > CONFIG.maxScore) score = CONFIG.maxScore;
-              scoreEl.textContent = score;
-              showMessage(currentQuestion.onCorrect, 'win');
-              // 检查分数里程碑
-              if (score === 50 || score === CONFIG.maxScore) {
-                showScorePopup(score);
-              }
-              // 检查成就解锁
-              if (currentQuestion.achievement) {
-                unlockAchievement(currentQuestion.achievement);
-              }
-            } else {
-              showMessage('已经...极限了♂♂♂', 'limit');
+            score += CONFIG.pointsPerCorrect;
+            if (score > CONFIG.maxScore) score = CONFIG.maxScore;
+            scoreEl.textContent = score;
+            showMessage(currentQuestion.onCorrect, 'win');
+            // 检查分数里程碑
+            if (score === 50 || score === CONFIG.maxScore) {
+              showScorePopup(score);
+            }
+            // 检查成就解锁
+            if (currentQuestion.achievement) {
+              unlockAchievement(currentQuestion.achievement);
             }
           } else {
             wrongCount++;
             showMessage(currentQuestion.onWrong, 'lose');
-            // 连续选择计数重置
+            // 重置连续选择计数
             consecutiveImg1Count = 0;
             consecutiveNotImg3Count = 0;
           }
@@ -625,19 +635,17 @@
           if (res.ok) {
             correctCount++;
             showMessage(res.msg, 'win');
-            if (score < CONFIG.maxScore) {
-              score += CONFIG.pointsPerCorrect;
-              if (score > CONFIG.maxScore) score = CONFIG.maxScore;
-              scoreEl.textContent = score;
-              // 检查分数里程碑
-              if (score === 50 || score === CONFIG.maxScore) {
-                showScorePopup(score);
-              }
+            score += CONFIG.pointsPerCorrect;
+            if (score > CONFIG.maxScore) score = CONFIG.maxScore;
+            scoreEl.textContent = score;
+            // 检查分数里程碑
+            if (score === 50 || score === CONFIG.maxScore) {
+              showScorePopup(score);
             }
           } else {
             wrongCount++;
             showMessage(res.msg, 'lose');
-            // 连续选择计数重置
+            // 重置连续选择计数
             consecutiveImg1Count = 0;
             consecutiveNotImg3Count = 0;
           }
@@ -730,26 +738,6 @@
             }
           }, 1000);
         }
-      }
-
-      // 显示结束游戏统计
-      function showEndGameStats() {
-        statsScore.textContent = score;
-        statsRound.textContent = round;
-        statsCorrect.textContent = correctCount;
-        statsWrong.textContent = wrongCount;
-        showPopup(endGameStatsPopup);
-      }
-
-      // 结束游戏（弹出确认框）
-      function showEndGameConfirm() {
-        showPopup(endGameConfirmPopup);
-      }
-
-      // 确认结束游戏
-      function confirmEndGame() {
-        closePopup(endGameConfirmPopup);
-        showEndGameStats();
       }
 
       // 显示重置成就确认框
