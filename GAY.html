@@ -12,8 +12,9 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      touch-action: manipulation;
+      touch-action: manipulation; /* 禁用移动端双击缩放 */
       font-family: "Helvetica Neue", Arial, sans-serif;
+      pointer-events: auto !important; /* 强制所有元素可交互 */
     }
     body {
       background: #121212;
@@ -21,6 +22,7 @@
       min-height: 100vh;
       padding: 16px;
       overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
     }
     /* 游戏主容器 */
     .game-container {
@@ -84,9 +86,11 @@
       border: 2px solid transparent;
       transition: border-color 0.2s;
       min-height: 120px;
+      z-index: 15; /* 确保选项可点击 */
     }
-    .option-item:active {
+    .option-item:active, .option-item:focus {
       border-color: #ffd700;
+      outline: none; /* 移除焦点框 */
     }
     .option-img {
       max-width: 100%;
@@ -127,7 +131,7 @@
       color: #ffd700;
       font-weight: bold;
     }
-    /* 按钮样式（手机端超大点击区域） */
+    /* 按钮样式（手机端超大点击区域+强制可交互） */
     .btn-group {
       display: flex;
       gap: 12px;
@@ -143,6 +147,8 @@
       cursor: pointer;
       touch-action: manipulation;
       min-height: 48px;
+      z-index: 20; /* 确保按钮可点击 */
+      position: relative; /* 防止被遮挡 */
     }
     .btn-primary {
       background: #ffd700;
@@ -151,6 +157,9 @@
     .btn-secondary {
       background: #444444;
       color: #ffffff;
+    }
+    .game-btn:active {
+      opacity: 0.8; /* 点击反馈 */
     }
     /* 消息提示 */
     .message-box {
@@ -179,7 +188,8 @@
       background: #2d2d2d;
       border-radius: 12px;
       position: relative;
-      animation: adFlash 1.5s infinite alternate; /* 广告闪烁 */
+      animation: adFlash 1.5s infinite alternate;
+      z-index: 15;
     }
     @keyframes adFlash {
       from { opacity: 1; }
@@ -235,6 +245,8 @@
       text-decoration: none;
       font-weight: bold;
       margin-top: 8px;
+      z-index: 20;
+      position: relative;
     }
     /* 弹窗基础样式 */
     .modal-overlay {
@@ -256,6 +268,7 @@
       padding: 24px;
       max-width: 400px;
       width: 100%;
+      z-index: 110;
     }
     .modal-title {
       font-size: 20px;
@@ -275,6 +288,7 @@
       border: none;
       font-size: 16px;
       cursor: pointer;
+      z-index: 120;
     }
     /* 广告图片弹窗 */
     .ad-img-modal {
@@ -295,6 +309,7 @@
       max-height: 80%;
       border-radius: 12px;
       overflow: hidden;
+      z-index: 210;
     }
     .ad-img-content img {
       width: 100%;
@@ -315,6 +330,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 220;
     }
     /* 成就墙样式 + 隐藏成就逻辑 */
     .achievement-wall {
@@ -351,6 +367,7 @@
       border: none;
       cursor: pointer;
       font-size: 20px;
+      z-index: 310;
     }
     .achievement-item {
       background: #1e1e1e;
@@ -372,13 +389,13 @@
     .achievement-method {
       font-size: 12px;
       color: #ff6347;
-      display: none; /* 未获得时隐藏方法 */
+      display: none;
     }
     .achievement-item.unlocked .achievement-method {
-      display: block; /* 获得后显示方法 */
+      display: block;
     }
     .achievement-item.hidden {
-      border-left-color: #9932cc; /* 隐藏成就特殊边框 */
+      border-left-color: #9932cc;
     }
     /* 隐藏元素 */
     .hidden {
@@ -392,33 +409,28 @@
 </head>
 <body>
   <!-- 音频元素（隐藏，手机端兼容mp3格式） -->
-  <audio id="gameBGM" src="game_bgm.mp3" preload="auto" loop></audio> <!-- 游戏轻松BGM -->
-  <audio id="ad1BGM" src="ad1_bgm.mp3" preload="auto" loop></audio> <!-- 广告1可爱BGM -->
-  <audio id="ad2BGM" src="ad2_bgm.mp3" preload="auto" loop></audio> <!-- 广告2骚气BGM -->
-  <audio id="correctSound" src="correct_sound.mp3" preload="auto"></audio> <!-- 答题正确音效 -->
-  <audio id="wrongSound" src="wrong_sound.mp3" preload="auto"></audio> <!-- 答题错误音效 -->
+  <audio id="gameBGM" src="game_bgm.mp3" preload="auto" loop></audio>
+  <audio id="ad1BGM" src="ad1_bgm.mp3" preload="auto" loop></think>
+  <audio id="ad2BGM" src="ad2_bgm.mp3" preload="auto" loop></audio>
+  <audio id="correctSound" src="correct_sound.mp3" preload="auto"> </audio>
+  <audio id="wrongSound" src="wrong_sound.mp3" preload="auto"> </audio>
 
   <!-- 游戏主容器 -->
   <div class="game-container">
-    <!-- 标题栏 -->
     <div class="game-header">
       <h1 class="game-title">答题挑战</h1>
       <p class="game-subtitle">点击正确选项，赢取分数</p>
     </div>
 
-    <!-- 题目区域 -->
     <div class="question-area">
       <p class="question-text" id="questionText">准备开始游戏</p>
       <p class="round-info">关卡: <span id="roundNum">0</span></p>
     </div>
 
-    <!-- 选项网格（强制4张图） -->
     <div class="options-grid" id="optionsGrid"></div>
 
-    <!-- 消息提示 -->
     <div class="message-box msg-normal" id="messageBox">点击「开始游戏」开始挑战</div>
 
-    <!-- 状态栏 -->
     <div class="status-bar">
       <div class="status-item">
         <p class="status-label">分数</p>
@@ -430,7 +442,6 @@
       </div>
     </div>
 
-    <!-- 按钮组 -->
     <div class="btn-group">
       <button class="game-btn btn-primary" id="startBtn">开始游戏</button>
       <button class="game-btn btn-secondary" id="resetBtn">重置游戏</button>
@@ -438,26 +449,24 @@
       <button class="game-btn btn-secondary" id="resetAchieveBtn">重置成就</button>
     </div>
 
-    <!-- 原有广告区域（显示广告封面GIF） -->
+    <!-- 原有广告区域 -->
     <div class="ad-section" id="originalAd">
       <button class="ad-close-btn" id="originalAdClose">×</button>
       <h3 class="ad-title">快❤️进❤️来❤️</h3>
-      <!-- 广告封面GIF -->
       <div class="ad-cover">
         <img src="广告封面.gif" alt="广告封面" id="adCoverGif">
       </div>
       <a href="javascript:;" class="ad-cta" id="originalAdCta">点击查看随机广告图</a>
     </div>
 
-    <!-- 新广告区域（火热换装） -->
+    <!-- 新广告区域 -->
     <div class="ad-section" id="newAd">
       <button class="ad-close-btn" id="newAdClose">×</button>
       <h3 class="ad-title">♂♂火热换装  在线漫画♂♂</h3>
       <a href="javascript:;" class="ad-cta" id="newAdCta">点击查看精彩内容</a>
     </div>
   </div>
-
-  <!-- 广告关闭确认弹窗 -->
+<!-- 广告关闭确认弹窗 -->
   <div class="modal-overlay hidden" id="adConfirmModal">
     <div class="modal-container">
       <h3 class="modal-title">不进来看看吗？</h3>
@@ -495,130 +504,57 @@
   </div>
 
   <script>
-    // ========== 配置项（恢复原有内容+移除帕字图片） ==========
+// ========== 配置项 ==========
     const CONFIG = {
-      // 答题图片素材（移除所有带"帕"字的图片）
       answerImages: {
         '酒馆伙计': '酒馆伙计.png',
         '宋': '宋.jpg',
         '朝南': '朝南.jpg',
         'Adams': 'Adams.jpg',
-        '正经衣服': '正经衣服.jpg', // 保留非帕字素材
+        '正经衣服': '正经衣服.jpg',
         'img1': 'img1.jpg',
         'img2': 'img2.jpg',
         'img3': 'img3.jpg',
         'img4': 'img4.jpg'
       },
-      // 广告素材（新广告仅含帕字图片）
       adMaterials: {
-        original: ['广告.png', '广告2.jpg', '广告3.jpg'], // 原有广告素材
-        new: ['橙帕.jpg', '潮男帕.jpg', '潮男帕的后背.jpg'], // 仅帕字图片
+        original: ['广告.png', '广告2.jpg', '广告3.jpg'],
+        new: ['橙帕.jpg', '潮男帕.jpg', '潮男帕的后背.jpg'],
         cover: '广告封面.gif'
       },
-      // 题库（恢复原有题目+新增题目）
       questions: [
-        // 原有题目
-        {
-          id: 0,
-          text: '找出里面所有男同',
-          type: 'special',
-          onSelect: () => ({ ok: false, msg: '哈哈骗你的，我只设置了单选' })
-        },
-        {
-          id: 1,
-          text: '找出真正的厨师',
-          type: 'single',
-          correctIdx: 0, // 对应img1
-          onCorrect: '你看起来很好吃',
-          onWrong: 'Cazzo，你不认识我吗',
-          achievement: 'chef'
-        },
-        {
-          id: 2,
-          text: '找出失去了球棍的心理治疗师',
-          type: 'single',
-          correctIdx: 3, // 对应img4
-          onCorrect: '隔壁他男人在双持ing',
-          onWrong: '再选错就过来心理治疗',
-          achievement: 'therapist'
-        },
-        {
-          id: 3,
-          text: '找出图中的直男',
-          type: 'multi-text',
-          onSelect: (idx) => {
-            if (idx === 0 || idx === 1) {
-              unlockAchievement('straight');
-              return { ok: true, msg: '💞我们是真正的♂直男♂呀' };
-            } else {
-              unlockAchievement('gayPride');
-              return { ok: true, msg: '🌈🌈🌈骄傲之♂GAY🌈🌈🌈' };
-            }
-          }
-        },
-        // 新增题目
-        {
-          id: 4,
-          text: '谁没有对象？',
-          type: 'single-key',
-          correct: '酒馆伙计',
-          msgWin: '回答正确！',
-          msgLose: '回答错误！',
-          achievement: 'pBrother'
-        },
-        {
-          id: 5,
-          text: '选出真的不是直男的人。',
-          type: 'single-key',
-          correct: '宋',
-          msgWin: '宋酱宋酱我们喜欢你❤️',
-          msgLose: '好像也没错...',
-          achievement: 'deepWaterCity'
-        },
-        {
-          id: 6,
-          text: '大富哥是哪位？',
-          type: 'single-key',
-          correct: '朝南',
-          msgWin: '朝哥请表演一下那个！💰💰💰',
-          msgLose: '不，这位应该不会给你钱。',
-          achievement: 'goldCoin'
-        },
-        {
-          id: 7,
-          text: '你好。请嬷——',
-          type: 'single-key',
-          correct: 'Adams',
-          msgWin: '“我可是直男呀！”',
-          msgLose: '诶？那也不错。'
-        }
+        {id:0,text:'找出里面所有男同',type:'special',onSelect:()=>({ok:false,msg:'哈哈骗你的，我只设置了单选'})},
+        {id:1,text:'找出真正的厨师',type:'single',correctIdx:0,onCorrect:'你看起来很好吃',onWrong:'Cazzo，你不认识我吗',achievement:'chef'},
+        {id:2,text:'找出失去了球棍的心理治疗师',type:'single',correctIdx:3,onCorrect:'隔壁他男人在双持ing',onWrong:'再选错就过来心理治疗',achievement:'therapist'},
+        {id:3,text:'找出图中的直男',type:'multi-text',onSelect:(idx)=>{if(idx===0||idx===1){unlockAchievement('straight');return{ok:true,msg:'💞我们是真正的♂直男♂呀'};}else{unlockAchievement('gayPride');return{ok:true,msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};}}},
+        {id:4,text:'谁没有对象？',type:'single-key',correct:'酒馆伙计',msgWin:'回答正确！',msgLose:'回答错误！',achievement:'pBrother'},
+        {id:5,text:'选出真的不是直男的人。',type:'single-key',correct:'宋',msgWin:'宋酱宋酱我们喜欢你❤️',msgLose:'好像也没错...',achievement:'deepWaterCity'},
+        {id:6,text:'大富哥是哪位？',type:'single-key',correct:'朝南',msgWin:'朝哥请表演一下那个！💰💰💰',msgLose:'不，这位应该不会给你钱。',achievement:'goldCoin'},
+        {id:7,text:'你好。请嬷——',type:'single-key',correct:'Adams',msgWin:'“我可是直男呀！”',msgLose:'诶？那也不错。'}
       ],
-      // 成就配置（恢复原有+新增+隐藏成就）
       achievements: {
-        // 原有成就
-        straight: { name: '我是直男', desc: '勇敢承认自己的身份', method: '选择「找出图中的直男」题目中的直男选项' },
-        gayPride: { name: '骄傲之GAY', desc: '为自己的身份感到骄傲', method: '选择「找出图中的直男」题目中的GAY选项' },
-        chef: { name: '你是食材吗', desc: '找到真正的厨师', method: '正确回答「找出真正的厨师」题目' },
-        therapist: { name: '心理治疗师', desc: '找到失去球棍的心理治疗师', method: '正确回答「找出失去了球棍的心理治疗师」题目' },
-        maxScore: { name: '天选男同🌈', desc: '达到满分100分', method: '在游戏中获得100分' },
-        forgotWho: { name: '好像忘了谁...', desc: '总觉得漏掉了什么重要的人', method: '连续4次不选择img3.jpg图片' },
-        forceful: { name: '强人所难♂', desc: '对某个选项有着执着的偏爱', method: '连续4次选择img1.jpg图片' },
-        omg: { name: 'OMG♂', desc: '你发现了隐藏的秘密！', method: '重置成就时选择"yeah♂"选项', hidden: true }, // 隐藏成就
-        // 新增成就
-        pBrother: { name: 'P...P弟？', desc: '在「谁没有对象？」问题中选择酒馆伙计', method: '回答「谁没有对象？」问题并选择酒馆伙计' }, },
-        witheredGrass: { name: '生命为何自称枯草？', desc: '连续5次不选择Adams', method: '答题时连续5次不选Adams图片' },
-        heLovesYou: { name: '他说他爱你。', desc: '朝南问题中选择第4张图片', method: '回答「大富哥是哪位？」时选第4个选项' },
-        goldCoin: { name: '爆点金币？', desc: '第一次选择朝南并答对', method: '首次回答「大富哥是哪位？」时选对朝南' },
-        deepWaterCity: { name: '深水城故事', desc: '正确回答「选出真的不是直男的人」', method: '答对「选出真的不是直男的人」问题' },
-        fashionIcon: { name: '衣品达人❤️', desc: '点开新添加的广告', method: '点击「♂♂火热换装」广告并查看' },
-        schiller: { name: 'Schiller.', desc: '点开原有的广告', method: '点击原有广告并查看随机图' }
+        straight: {name:'我是直男',desc:'勇敢承认自己的身份',method:'选择「找出图中的直男」题目中的直男选项'},
+        gayPride: {name:'骄傲之GAY',desc:'为自己的身份感到骄傲',method:'选择「找出图中的直男」题目中的GAY选项'},
+        chef: {name:'你是食材吗',desc:'找到真正的厨师',method:'正确回答「找出真正的厨师」题目'},
+        therapist: {name:'心理治疗师',desc:'找到失去球棍的心理治疗师',method:'正确回答「找出失去了球棍的心理治疗师」题目'},
+        maxScore: {name:'天选男同🌈',desc:'达到满分100分',method:'在游戏中获得100分'},
+        forgotWho: {name:'好像忘了谁...',desc:'总觉得漏掉了什么重要的人',method:'连续4次不选择img3.jpg图片'},
+        forceful: {name:'强人所难♂',desc:'对某个选项有着执着的偏爱',method:'连续4次选择img1.jpg图片'},
+        omg: {name:'OMG♂',desc:'你发现了隐藏的秘密！',method:'重置成就时选择"yeah♂"选项',hidden:true},
+        pBrother: {name:'P...P弟？',desc:'在「谁没有对象？」问题中选择酒馆伙计',method:'回答「谁没有对象？」问题并选择酒馆伙计'},
+        witheredGrass: {name:'生命为何自称枯草？',desc:'连续5次不选择Adams',method:'答题时连续5次不选Adams图片'},
+        heLovesYou: {name:'他说他爱你。',desc:'朝南问题中选择第4张图片',method:'回答「大富哥是哪位？」时选第4个选项'},
+        goldCoin: {name:'爆点金币？',desc:'第一次选择朝南并答对',method:'首次回答「大富哥是哪位？」时选对朝南'},
+        deepWaterCity: {name:'深水城故事',desc:'正确回答「选出真的不是直男的人」',method:'答对「选出真的不是直男的人」问题'},
+        fashionIcon: {name:'衣品达人❤️',desc:'点开新添加的广告',method:'点击「♂♂火热换装」广告并查看'},
+        schiller: {name:'Schiller.',desc:'点开原有广告并看到广告.png',method:'点击原有广告且随机到广告.png时解锁'}
       },
-      // 游戏参数
-      timeLimit: 8, // 每题倒计时（秒）
-      scorePerCorrect: 5, // 每题正确得分
-      maxScore: 100 // 满分
+      timeLimit: 8,
+      scorePerCorrect: 5,
+      maxScore: 100
     };
-// ========== 全局状态（恢复原有统计变量） ==========
+
+    // ========== 全局状态 ==========
     let gameState = {
       isPlaying: false,
       currentQuestion: null,
@@ -626,23 +562,20 @@
       round: 0,
       timeLeft: 0,
       timer: null,
-      // 原有统计
       correctCount: 0,
       wrongCount: 0,
-      consecutiveImg1Count: 0, // 连续选img1次数
-      consecutiveNotImg3Count: 0, // 连续不选img3次数
-      // 新增统计
+      consecutiveImg1Count: 0,
+      consecutiveNotImg3Count: 0,
       consecutiveNotAdams: 0,
       firstChooseChaonan: false,
       hasGotPBrother: false,
-      // 成就
       unlockedAchievements: new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []),
-      triggeredScorePopups: new Set() // 已触发的分数弹窗
+      triggeredScorePopups: new Set()
     };
 
-    // ========== DOM元素（新增音频+重置成就按钮） ==========
-    const elements = {
-      // 音频元素
+    // ========== DOM元素（确保所有id正确获取） ==========
+    const el = {
+      // 音频
       gameBGM: document.getElementById('gameBGM'),
       ad1BGM: document.getElementById('ad1BGM'),
       ad2BGM: document.getElementById('ad2BGM'),
@@ -660,7 +593,7 @@
       achievementBtn: document.getElementById('achievementBtn'),
       resetAchieveBtn: document.getElementById('resetAchieveBtn'),
       // 广告
-      originalAd: document.getElementById('originalAd'),
+      originalAd:: document.getElementById('originalAd'),
       originalAdClose: document.getElementById('originalAdClose'),
       originalAdCta: document.getElementById('originalAdCta'),
       newAd: document.getElementById('newAd'),
@@ -673,7 +606,7 @@
       adImgModal: document.getElementById('adImgModal'),
       adImgCloseBtn: document.getElementById('adImgCloseBtn'),
       adImgContent: document.getElementById('adImgContent'),
-      // 重置成就弹窗
+      // 重置成就
       resetAchieveModal: document.getElementById('resetAchieveModal'),
       resetAchieveConfirm: document.getElementById('resetAchieveConfirm'),
       resetAchieveYeah: document.getElementById('resetAchieveYeah'),
@@ -682,71 +615,56 @@
       achievementWallClose: document.getElementById('achievementWallClose'),
       achievementList: document.getElementById('achievementList')
     };
-// ========== 音频控制函数（适配手机端播放规则） ==========
-    /** 播放游戏BGM */
+// ========== 音频控制（修复移动端播放） ==========
+    function playAudio(audioEl) {
+      audioEl.currentTime = 0;
+      audioEl.play().catch(err => {
+        console.log('音频播放失败（需用户交互）:', err);
+        // 移动端强制通过用户交互初始化音频
+        document.body.addEventListener('click', () => {
+          audioEl.play();
+        }, { once: true });
+      });
+    }
+
     function playGameBGM() {
       pauseAllBGM();
-      elements.gameBGM.play().catch(err => {
-        console.log('游戏BGM播放失败（需用户交互）', err);
-      });
+      playAudio(el.gameBGM);
     }
 
-    /** 播放广告1（快进来）BGM */
     function playAd1BGM() {
       pauseAllBGM();
-      elements.ad1BGM.play().catch(err => {
-        console.log('广告1BGM播放失败（需用户交互）', err);
-      });
+      playAudio(el.ad1BGM);
     }
 
-    /** 播放广告2（火热换装）BGM */
     function playAd2BGM() {
       pauseAllBGM();
-      elements.ad2BGM.play().catch(err => {
-        console.log('广告2BGM播放失败（需用户交互）', err);
-      });
+      playAudio(el.ad2BGM);
     }
 
-    /** 暂停所有BGM */
     function pauseAllBGM() {
-      elements.gameBGM.pause();
-      elements.ad1BGM.pause();
-      elements.ad2BGM.pause();
-      // 重置BGM播放位置（下次播放从头开始）
-      elements.ad1BGM.currentTime = 0;
-      elements.ad2BGM.currentTime = 0;
+      el.gameBGM.pause();
+      el.ad1BGM.pause();
+      el.ad2BGM.pause();
+      el.ad1BGM.currentTime = 0;
+      el.ad2BGM.currentTime = 0;
     }
 
-    /** 播放答题正确音效 */
     function playCorrectSound() {
-      elements.correctSound.currentTime = 0;
-      elements.correctSound.play().catch(err => {
-        console.log('正确音效播放失败', err);
-      });
+      playAudio(el.correctSound);
     }
 
-    /** 播放答题错误音效 */
     function playWrongSound() {
-      elements.wrongSound.currentTime = 0;
-      elements.wrongSound.play().catch(err => {
-        console.log('错误音效播放失败', err);
-      });
+      playAudio(el.wrongSound);
     }
 
-    // ========== 工具函数（恢复图片加载容错+成就处理） ==========
-    /**
-     * 图片加载容错：失败时显示占位图
-     */
+    // ========== 工具函数 ==========
     function handleImageError(img, altText) {
-      img.onerror = function() {
-        const parent = img.parentElement;
-        parent.innerHTML = `<div class="img-placeholder">${altText}<br>加载失败</div>`;
+      img.onerror = () => {
+        img.parentElement.innerHTML = `<div class="img-placeholder">${altText}<br>加载失败</div>`;
       };
     }
 
-    /**
-     * 随机打乱数组
-     */
     function shuffleArray(arr) {
       const newArr = [...arr];
       for (let i = newArr.length - 1; i > 0; i--) {
@@ -756,54 +674,37 @@
       return newArr;
     }
 
-    /**
-     * 生成随机4个选项（必含正确答案，移除帕字图片）
-     */
     function getRandomOptions(correctKey = null, correctIdx = null) {
       const allKeys = Object.keys(CONFIG.answerImages);
       let finalOptions = [];
-
       if (correctKey) {
-        // 新增题目：按key匹配
         const otherKeys = allKeys.filter(key => key !== correctKey);
         const randomOthers = shuffleArray(otherKeys).slice(0, 3);
         finalOptions = shuffleArray([...randomOthers, correctKey]);
       } else if (correctIdx !== null) {
-        // 原有题目：按索引匹配（img1/img2/img3/img4）
         const imgKeys = ['img1', 'img2', 'img3', 'img4'];
         finalOptions = shuffleArray(imgKeys);
       } else {
-        // 特殊题目：随机4个非帕字素材
         finalOptions = shuffleArray(allKeys).slice(0, 4);
       }
       return finalOptions;
     }
 
-    /**
-     * 解锁成就（含隐藏成就逻辑）
-     */
     function unlockAchievement(achievementId) {
       if (gameState.unlockedAchievements.has(achievementId)) return;
       gameState.unlockedAchievements.add(achievementId);
       localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(gameState.unlockedAchievements)));
       renderAchievementWall();
-      // 显示成就提示
       const achievement = CONFIG.achievements[achievementId];
       showMessage(`解锁成就：${achievement.name}`, 'win');
     }
 
-    /**
-     * 显示消息提示
-     */
     function showMessage(text, type = 'normal') {
-      elements.messageBox.textContent = text;
-      elements.messageBox.className = 'message-box';
-      elements.messageBox.classList.add(`msg-${type}`);
+      el.messageBox.textContent = text;
+      el.messageBox.className = 'message-box';
+      el.messageBox.classList.add(`msg-${type}`);
     }
 
-    /**
-     * 显示/隐藏弹窗
-     */
     function toggleModal(modal, show) {
       if (show) {
         modal.classList.remove('hidden');
@@ -814,64 +715,77 @@
       }
     }
 
-    /**
-     * 显示分数里程碑弹窗（恢复原有满分成就）
-     */
     function showScorePopup(score) {
       if (gameState.triggeredScorePopups.has(score)) return;
       gameState.triggeredScorePopups.add(score);
-      if (score === 50) {
-        showMessage('已获得50分！离满分不远了', 'win');
-      } else if (score === CONFIG.maxScore) {
+      if (score === 50) showMessage('已获得50分！离满分不远了', 'win');
+      if (score === CONFIG.maxScore) {
         showMessage('满分！解锁「天选男同🌈」成就', 'win');
         unlockAchievement('maxScore');
       }
     }
 
-    // ========== 游戏核心逻辑（恢复原有答题逻辑+新增音频） ==========
-    /**
-     * 初始化游戏
-     */
+// ========== 游戏核心逻辑 ==========
     function initGame() {
-      // 绑定按钮事件
-      elements.startBtn.addEventListener('click', startGame);
-      elements.resetBtn.addEventListener('click', resetGame);
-      elements.achievementBtn.addEventListener('click', () => {
-        elements.achievementWall.classList.add('show');
-        renderAchievementWall();
-      });
-      elements.achievementWallClose.addEventListener('click', () => {
-        elements.achievementWall.classList.remove('show');
-      });
-      // 绑定重置成就事件
-      elements.resetAchieveBtn.addEventListener('click', () => {
-        toggleModal(elements.resetAchieveModal, true);
-      });
-      elements.resetAchieveConfirm.addEventListener('click', () => {
-        resetAchievements(false);
-        toggleModal(elements.resetAchieveModal, false);
-      });
-      elements.resetAchieveYeah.addEventListener('click', () => {
-        resetAchievements(true); // 触发隐藏成就
-        toggleModal(elements.resetAchieveModal, false);
-      });
-
-      // 绑定广告事件
-      bindAdEvents();
-
+      // 绑定所有事件（修复移动端touch+click）
+      bindAllEvents();
+      // 广告封面容错
+      handleImageError(el.adCoverGif, '广告封面');
       // 初始化成就墙
       renderAchievementWall();
-
-      // 广告封面GIF容错
-      handleImageError(elements.adCoverGif, '广告封面');
-
-      // 重置游戏状态
+      // 重置游戏
       resetGame();
+      console.log('游戏初始化完成，所有事件绑定成功');
     }
 
-    /**
-     * 开始游戏（触发游戏BGM播放）
-     */
+    function bindAllEvents() {
+      // 游戏按钮
+      el.startBtn.addEventListener('click', startGame);
+      el.startBtn.addEventListener('touchstart', (e) => {e.preventDefault(); startGame();}, {passive: false});
+      el.resetBtn.addEventListener('click', resetGame);
+      el.resetBtn.addEventListener('touchstart', (e) => {e.preventDefault(); resetGame();}, {passive: false});
+      el.achievementBtn.addEventListener('click', () => {
+        el.achievementWall.classList.add('show');
+        renderAchievementWall();
+      });
+      el.achievementBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        el.achievementWall.classList.add('show');
+        renderAchievementWall();
+      }, {passive: false});
+      el.achievementWallClose.addEventListener('click', () => el.achievementWall.classList.remove('show'));
+      el.achievementWallClose.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        el.achievementWall.classList.remove('show');
+      }, {passive: false});
+      // 重置成就
+      el.resetAchieveBtn.addEventListener('click', () => toggleModal(el.resetAchieveModal, true));
+      el.resetAchieveBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        toggleModal(el.resetAchieveModal, true);
+      }, {passive: false});
+      el.resetAchieveConfirm.addEventListener('click', () => {
+        resetAchievements(false);
+        toggleModal(el.resetAchieveModal, false);
+      });
+      el.resetAchieveConfirm.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        resetAchievements(false);
+        toggleModal(el.resetAchieveModal, false);
+      }, {passive: false});
+      el.resetAchieveYeah.addEventListener('click', () => {
+        resetAchievements(true);
+        toggleModal(el.resetAchieveModal, false);
+      });
+      el.resetAchieveYeah.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        resetAchievements(true);
+        toggleModal(el.resetAchieveModal, false);
+      }, {passive: false});
+      // 广告事件
+      bindAdEvents();
+    }
+
     function startGame() {
       if (gameState.isPlaying) return;
       gameState.isPlaying = true;
@@ -881,41 +795,31 @@
       gameState.wrongCount = 0;
       gameState.consecutiveImg1Count = 0;
       gameState.consecutiveNotImg3Count = 0;
-      elements.scoreNum.textContent = '0';
-      // 播放游戏BGM（用户交互后触发，规避自动播放限制）
+      el.scoreNum.textContent = '0';
+      // 首次用户交互，初始化音频并播放游戏BGM
       playGameBGM();
       nextRound();
+      console.log('游戏开始，BGM播放');
     }
 
-    /**
-     * 下一轮答题
-     */
     function nextRound() {
       clearInterval(gameState.timer);
-      // 随机选题目
       gameState.currentQuestion = shuffleArray(CONFIG.questions)[0];
       gameState.round++;
       gameState.timeLeft = CONFIG.timeLimit;
-
-      // 更新UI
-      elements.questionText.textContent = gameState.currentQuestion.text;
-      elements.roundNum.textContent = gameState.round;
-      elements.timerNum.textContent = `${gameState.timeLeft}s`;
+      el.questionText.textContent = gameState.currentQuestion.text;
+      el.roundNum.textContent = gameState.round;
+      el.timerNum.textContent = `${gameState.timeLeft}s`;
       showMessage('请选择正确答案', 'normal');
-
-      // 渲染4个选项
       renderOptions();
-
-      // 启动倒计时
       gameState.timer = setInterval(() => {
         gameState.timeLeft--;
-        elements.timerNum.textContent = `${gameState.timeLeft}s`;
+        el.timerNum.textContent = `${gameState.timeLeft}s`;
         if (gameState.timeLeft <= 0) {
           clearInterval(gameState.timer);
           showMessage('时间到！回答错误', 'lose');
-          playWrongSound(); // 播放错误音效
+          playWrongSound();
           gameState.wrongCount++;
-          // 重置连续计数
           gameState.consecutiveImg1Count = 0;
           gameState.consecutiveNotImg3Count = 0;
           gameState.consecutiveNotAdams = 0;
@@ -924,53 +828,38 @@
       }, 1000);
     }
 
-    /**
-     * 渲染4个选项图片
-     */
     function renderOptions() {
-      elements.optionsGrid.innerHTML = '';
+      el.optionsGrid.innerHTML = '';
       const q = gameState.currentQuestion;
       let options = [];
+      if (q.type === 'single-key') options = getRandomOptions(q.correct);
+      else if (q.type === 'single') options = getRandomOptions(null, q.correctIdx);
+      else options = getRandomOptions();
 
-      // 根据题目类型生成选项
-      if (q.type === 'single-key') {
-        options = getRandomOptions(q.correct);
-      } else if (q.type === 'single') {
-        options = getRandomOptions(null, q.correctIdx);
-      } else {
-        options = getRandomOptions();
-      }
-
-      // 强制渲染4个选项
       options.forEach((key, index) => {
         const optionItem = document.createElement('div');
         optionItem.className = 'option-item';
         optionItem.dataset.key = key;
         optionItem.dataset.index = index + 1;
 
-        // 创建图片元素
         const img = document.createElement('img');
         img.src = CONFIG.answerImages[key];
         img.alt = key;
         img.className = 'option-img';
         handleImageError(img, key);
-
         optionItem.appendChild(img);
 
-        // 绑定点击事件（手机端触摸+点击）
+        // 绑定选项点击（touch+click）
         optionItem.addEventListener('click', handleOptionClick);
-        optionItem.addEventListener('touchend', (e) => {
+        optionItem.addEventListener('touchstart', (e) => {
           e.preventDefault();
           handleOptionClick.call(optionItem);
-        });
+        }, {passive: false});
 
-        elements.optionsGrid.appendChild(optionItem);
+        el.optionsGrid.appendChild(optionItem);
       });
     }
 
-    /**
-     * 处理选项点击（新增音效播放）
-     */
     function handleOptionClick() {
       if (!gameState.isPlaying) return;
       clearInterval(gameState.timer);
@@ -982,125 +871,85 @@
       let isCorrect = false;
       let resultMsg = '';
 
-      // 不同题型的答题逻辑
       if (q.type === 'single-key') {
-        // 新增题目：按key判断
         isCorrect = selectedKey === q.correct;
         resultMsg = isCorrect ? q.msgWin : q.msgLose;
       } else if (q.type === 'single') {
-        // 原有题目：按索引判断
         isCorrect = (selectedKey === `img${q.correctIdx + 1}`);
         resultMsg = isCorrect ? q.onCorrect : q.onWrong;
       } else if (q.type === 'special' || q.type === 'multi-text') {
-        // 原有特殊题目
         const res = q.onSelect(selectedIndex - 1);
         isCorrect = res.ok;
         resultMsg = res.msg;
       }
 
       // 播放音效
-      if (isCorrect) {
-        playCorrectSound();
-      } else {
-        playWrongSound();
-      }
+      isCorrect ? playCorrectSound() : playWrongSound();
 
-      // 更新分数和统计
       if (isCorrect) {
         gameState.correctCount++;
         gameState.score += CONFIG.scorePerCorrect;
         if (gameState.score > CONFIG.maxScore) gameState.score = CONFIG.maxScore;
-        elements.scoreNum.textContent = gameState.score;
+        el.scoreNum.textContent = gameState.score;
         showMessage(resultMsg, 'win');
-        // 触发分数弹窗
-        if (gameState.score === 50 || gameState.score === CONFIG.maxScore) {
-          showScorePopup(gameState.score);
-        }
-        // 解锁题目关联成就
-        if (q.achievement) {
-          unlockAchievement(q.achievement);
-        }
+        if (gameState.score === 50 || gameState.score === CONFIG.maxScore) showScorePopup(gameState.score);
+        if (q.achievement) unlockAchievement(q.achievement);
       } else {
         gameState.wrongCount++;
         showMessage(resultMsg, 'lose');
-        // 重置连续计数
         gameState.consecutiveImg1Count = 0;
         gameState.consecutiveNotImg3Count = 0;
         gameState.consecutiveNotAdams = 0;
       }
 
-      // ========== 原有连续选择成就判断 ==========
-      // 强人所难♂：连续选img1
+      // 原有成就判断
       if (selectedKey === 'img1') {
         gameState.consecutiveImg1Count++;
         if (gameState.consecutiveImg1Count >= 4) {
           unlockAchievement('forceful');
           gameState.consecutiveImg1Count = 0;
         }
-      } else {
-        gameState.consecutiveImg1Count = 0;
-      }
+      } else gameState.consecutiveImg1Count = 0;
 
-      // 好像忘了谁...：连续不选img3
       if (selectedKey !== 'img3') {
         gameState.consecutiveNotImg3Count++;
         if (gameState.consecutiveNotImg3Count >= 4) {
           unlockAchievement('forgotWho');
           gameState.consecutiveNotImg3Count = 0;
         }
-      } else {
-        gameState.consecutiveNotImg3Count = 0;
-      }
+      } else gameState.consecutiveNotImg3Count = 0;
 
-      // ========== 新增成就判断 ==========
-      // P...P弟？
+      // 新增成就判断
       if (q.id === 4 && selectedKey === '酒馆伙计' && !gameState.hasGotPBrother) {
         unlockAchievement('pBrother');
         gameState.hasGotPBrother = true;
       }
 
-      // 生命为何自称枯草？
       if (selectedKey !== 'Adams') {
         gameState.consecutiveNotAdams++;
         if (gameState.consecutiveNotAdams >= 5) {
           unlockAchievement('witheredGrass');
           gameState.consecutiveNotAdams = 0;
         }
-      } else {
-        gameState.consecutiveNotAdams = 0;
-      }
+      } else gameState.consecutiveNotAdams = 0;
 
-      // 他说他爱你。
-      if (q.id === 6 && selectedIndex === 4) {
-        unlockAchievement('heLovesYou');
-      }
-
-      // 爆点金币？（首次选对朝南）
+      if (q.id === 6 && selectedIndex === 4) unlockAchievement('heLovesYou');
       if (q.id === 6 && isCorrect && !gameState.firstChooseChaonan) {
         unlockAchievement('goldCoin');
         gameState.firstChooseChaonan = true;
       }
+      if (q.id === 5 && isCorrect) unlockAchievement('deepWaterCity');
 
-      // 深水城故事
-      if (q.id === 5 && isCorrect) {
-        unlockAchievement('deepWaterCity');
-      }
-
-      // 延迟进入下一轮
       setTimeout(() => {
         gameState.isPlaying = true;
-        // 恢复游戏BGM（如果被广告BGM打断）
         playGameBGM();
         nextRound();
       }, 1500);
     }
 
-    /**
-     * 重置游戏（暂停所有BGM）
-     */
     function resetGame() {
       clearInterval(gameState.timer);
-      pauseAllBGM(); // 暂停所有音频
+      pauseAllBGM();
       gameState = {
         isPlaying: false,
         currentQuestion: null,
@@ -1118,39 +967,28 @@
         unlockedAchievements: gameState.unlockedAchievements,
         triggeredScorePopups: new Set()
       };
-
-      // 更新UI
-      elements.scoreNum.textContent = '0';
-      elements.timerNum.textContent = '--';
-      elements.roundNum.textContent = '0';
-      elements.questionText.textContent = '准备开始游戏';
-      elements.optionsGrid.innerHTML = '';
+      el.scoreNum.textContent = '0';
+      el.timerNum.textContent = '--';
+      el.roundNum.textContent = '0';
+      el.questionText.textContent = '准备开始游戏';
+      el.optionsGrid.innerHTML = '';
       showMessage('点击「开始游戏」开始挑战', 'normal');
+      console.log('游戏重置，音频暂停');
     }
 
-    /**
-     * 重置成就（含隐藏成就触发）
-     */
     function resetAchievements(isYeah) {
       gameState.unlockedAchievements.clear();
       localStorage.removeItem('unlockedAchievements');
       renderAchievementWall();
       showMessage('成就已重置', 'normal');
-      // 触发隐藏成就OMG♂
-      if (isYeah) {
-        unlockAchievement('omg');
-      }
+      if (isYeah) unlockAchievement('omg');
     }
 
-    /**
-     * 渲染成就墙（隐藏成就获得后显示方法）
-     */
     function renderAchievementWall() {
-      elements.achievementList.innerHTML = '';
+      el.achievementList.innerHTML = '';
       Object.entries(CONFIG.achievements).forEach(([id, achievement]) => {
         const isUnlocked = gameState.unlockedAchievements.has(id);
         const isHidden = achievement.hidden || false;
-
         const item = document.createElement('div');
         item.className = `achievement-item ${isUnlocked ? 'unlocked' : ''} ${isHidden ? 'hidden' : ''}`;
         item.innerHTML = `
@@ -1158,64 +996,88 @@
           <p class="achievement-desc">${achievement.desc}</p>
           <p class="achievement-method">解锁方法：${achievement.method}</p>
         `;
-        elements.achievementList.appendChild(item);
+        el.achievementList.appendChild(item);
       });
     }
-// ========== 广告逻辑（BGM切换+闪烁+GIF+帕字图片） ==========
-    /**
-     * 绑定广告事件
-     */
+// ========== 广告逻辑（修改Schiller成就触发） ==========
     function bindAdEvents() {
-      // 原有广告关闭按钮
-      elements.originalAdClose.addEventListener('click', () => {
-        toggleModal(elements.adConfirmModal, true);
-      });
-
-      // 原有广告CTA（播放可爱BGM）
-      elements.originalAdCta.addEventListener('click', () => {
-        showRandomAdImg('original');
-        playAd1BGM(); // 广告1可爱活泼BGM
-      });
-
-      // 新广告关闭按钮
-      elements.newAdClose.addEventListener('click', () => {
-        elements.newAd.style.display = 'none';
-        showMessage('已关闭换装广告', 'normal');
-        // 恢复游戏BGM（如果游戏在进行）
-        if (gameState.isPlaying) playGameBGM();
-      });
-
-      // 新广告CTA（播放骚气BGM）
-      elements.newAdCta.addEventListener('click', () => {
-        showRandomAdImg('new');
-        playAd2BGM(); // 广告2骚气暧昧BGM
-      });
-
-      // 广告确认弹窗按钮
-      elements.adConfirmBtn.addEventListener('click', () => {
-        toggleModal(elements.adConfirmModal, false);
+      // 原有广告关闭
+      el.originalAdClose.addEventListener('click', () => toggleModal(el.adConfirmModal, true));
+      el.originalAdClose.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        toggleModal(el.adConfirmModal, true);
+      }, {passive: false});
+      // 原有广告CTA
+      el.originalAdCta.addEventListener('click', () => {
         showRandomAdImg('original');
         playAd1BGM();
       });
-
-      elements.adCancelBtn.addEventListener('click', () => {
-        toggleModal(elements.adConfirmModal, false);
-        elements.originalAd.style.display = 'none';
-        showMessage('已关闭广告专区', 'normal');
-      });
-
-      // 广告图片弹窗关闭（恢复游戏BGM）
-      elements.adImgCloseBtn.addEventListener('click', () => {
-        toggleModal(elements.adImgModal, false);
-        pauseAllBGM();
-        // 恢复游戏BGM（如果游戏在进行）
+      el.originalAdCta.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        showRandomAdImg('original');
+        playAd1BGM();
+      }, {passive: false});
+      // 新广告关闭
+      el.newAdClose.addEventListener('click', () => {
+        el.newAd.style.display = 'none';
+        showMessage('已关闭换装广告', 'normal');
         if (gameState.isPlaying) playGameBGM();
       });
-
-      // 点击广告弹窗空白处关闭
-      elements.adImgModal.addEventListener('click', (e) => {
-        if (e.target === elements.adImgModal) {
-          toggleModal(elements.adImgModal, false);
+      el.newAdClose.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        el.newAd.style.display = 'none';
+        showMessage('已关闭换装广告', 'normal');
+        if (gameState.isPlaying) playGameBGM();
+      }, {passive: false});
+      // 新广告CTA
+      el.newAdCta.addEventListener('click', () => {
+        showRandomAdImg('new');
+        playAd2BGM();
+      });
+      el.newAdCta.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        showRandomAdImg('new');
+        playAd2BGM();
+      }, {passive: false});
+      // 广告确认弹窗
+      el.adConfirmBtn.addEventListener('click', () => {
+        toggleModal(el.adConfirmModal, false);
+        showRandomAdImg('original');
+        playAd1BGM();
+      });
+      el.adConfirmBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        toggleModal(el.adConfirmModal, false);
+        showRandomAdImg('original');
+        playAd1BGM();
+      }, {passive: false});
+      el.adCancelBtn.addEventListener('click', () => {
+        toggleModal(el.adConfirmModal, false);
+        el.originalAd.style.display = 'none';
+        showMessage('已关闭广告专区', 'normal');
+      });
+      el.adCancelBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        toggleModal(el.adConfirmModal, false);
+        el.originalAd.style.display = 'none';
+        showMessage('已关闭广告专区', 'normal');
+      }, {passive: false});
+      // 广告图片弹窗关闭
+      el.adImgCloseBtn.addEventListener('click', () => {
+        toggleModal(el.adImgModal, false);
+        pauseAllBGM();
+        if (gameState.isPlaying) playGameBGM();
+      });
+      el.adImgCloseBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        toggleModal(el.adImgModal, false);
+        pauseAllBGM();
+        if (gameState.isPlaying) playGameBGM();
+      }, {passive: false});
+      // 点击空白处关闭广告弹窗
+      el.adImgModal.addEventListener('click', (e) => {
+        if (e.target === el.adImgModal) {
+          toggleModal(el.adImgModal, false);
           pauseAllBGM();
           if (gameState.isPlaying) playGameBGM();
         }
@@ -1223,30 +1085,34 @@
     }
 
     /**
-     * 显示随机广告图（新广告仅显示帕字图片）
+     * 修改Schiller成就触发：仅当original广告随机到广告.png时解锁
      */
     function showRandomAdImg(type) {
       const adImgs = type === 'original' ? CONFIG.adMaterials.original : CONFIG.adMaterials.new;
       const randomImg = shuffleArray(adImgs)[0];
 
       // 渲染广告图
-      elements.adImgContent.innerHTML = `<img src="${randomImg}" alt="广告图">`;
-      const img = elements.adImgContent.querySelector('img');
+      el.adImgContent.innerHTML = `<img src="${randomImg}" alt="广告图">`;
+      const img = el.adImgContent.querySelector('img');
       handleImageError(img, '广告图');
 
       // 显示弹窗
-      toggleModal(elements.adImgModal, true);
+      toggleModal(el.adImgModal, true);
 
-      // 解锁对应成就
+      // 成就解锁逻辑
       if (type === 'original') {
-        unlockAchievement('schiller');
+        // 仅当随机到广告.png时解锁Schiller
+        if (randomImg === '广告.png') {
+          unlockAchievement('schiller');
+        }
       } else {
+        // 新广告正常解锁衣品达人
         unlockAchievement('fashionIcon');
       }
     }
 
-    // ========== 初始化 ==========
-    window.addEventListener('load', initGame);
+    // ========== 初始化（确保DOM加载完成后执行） ==========
+    document.addEventListener('DOMContentLoaded', initGame);
   </script>
 </body>
 </html>
