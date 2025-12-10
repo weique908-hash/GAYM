@@ -5,16 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>答题游戏</title>
+  <title>答题挑战</title>
   <style>
-    /* 全局重置 */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      touch-action: manipulation; /* 禁用移动端双击缩放 */
+      touch-action: manipulation;
       font-family: "Helvetica Neue", Arial, sans-serif;
-      pointer-events: auto !important; /* 强制所有元素可交互 */
+      pointer-events: auto !important;
     }
     body {
       background: #121212;
@@ -22,9 +21,8 @@
       min-height: 100vh;
       padding: 16px;
       overflow-x: hidden;
-      -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+      -webkit-tap-highlight-color: transparent;
     }
-    /* 游戏主容器 */
     .game-container {
       max-width: 500px;
       margin: 0 auto;
@@ -35,7 +33,6 @@
       position: relative;
       z-index: 10;
     }
-    /* 标题栏 */
     .game-header {
       text-align: center;
       margin-bottom: 20px;
@@ -49,7 +46,6 @@
       font-size: 14px;
       color: #aaaaaa;
     }
-    /* 题目区域 */
     .question-area {
       margin-bottom: 20px;
       padding: 12px;
@@ -67,7 +63,6 @@
       color: #888888;
       text-align: right;
     }
-    /* 选项网格（强制2列，共4张图） */
     .options-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -86,11 +81,12 @@
       border: 2px solid transparent;
       transition: border-color 0.2s;
       min-height: 120px;
-      z-index: 15; /* 确保选项可点击 */
+      z-index: 15;
+      position: relative;
     }
     .option-item:active, .option-item:focus {
       border-color: #ffd700;
-      outline: none; /* 移除焦点框 */
+      outline: none;
     }
     .option-img {
       max-width: 100%;
@@ -109,7 +105,6 @@
       background: #333333;
       border-radius: 8px;
     }
-    /* 状态栏（分数+倒计时） */
     .status-bar {
       display: flex;
       justify-content: space-between;
@@ -131,7 +126,6 @@
       color: #ffd700;
       font-weight: bold;
     }
-    /* 按钮样式（手机端超大点击区域+强制可交互） */
     .btn-group {
       display: flex;
       gap: 12px;
@@ -147,8 +141,8 @@
       cursor: pointer;
       touch-action: manipulation;
       min-height: 48px;
-      z-index: 20; /* 确保按钮可点击 */
-      position: relative; /* 防止被遮挡 */
+      z-index: 999;
+      position: relative;
     }
     .btn-primary {
       background: #ffd700;
@@ -159,9 +153,8 @@
       color: #ffffff;
     }
     .game-btn:active {
-      opacity: 0.8; /* 点击反馈 */
+      opacity: 0.8;
     }
-    /* 消息提示 */
     .message-box {
       padding: 12px;
       border-radius: 8px;
@@ -181,7 +174,6 @@
       background: #2d2d2d;
       color: #aaaaaa;
     }
-    /* 广告区域 + 闪烁动画 */
     .ad-section {
       margin-bottom: 16px;
       padding: 16px;
@@ -210,7 +202,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 20;
+      z-index: 999;
+      position: relative;
     }
     .ad-title {
       font-size: 16px;
@@ -218,7 +211,6 @@
       margin-bottom: 12px;
       text-align: center;
     }
-    /* 广告封面GIF容器 */
     .ad-cover {
       width: 100%;
       height: 120px;
@@ -245,10 +237,9 @@
       text-decoration: none;
       font-weight: bold;
       margin-top: 8px;
-      z-index: 20;
+      z-index: 999;
       position: relative;
     }
-    /* 弹窗基础样式 */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -289,8 +280,8 @@
       font-size: 16px;
       cursor: pointer;
       z-index: 120;
+      position: relative;
     }
-    /* 广告图片弹窗 */
     .ad-img-modal {
       position: fixed;
       top: 0;
@@ -331,8 +322,8 @@
       align-items: center;
       justify-content: center;
       z-index: 220;
+      position: relative;
     }
-    /* 成就墙样式 + 隐藏成就逻辑 */
     .achievement-wall {
       position: fixed;
       top: 0;
@@ -368,6 +359,7 @@
       cursor: pointer;
       font-size: 20px;
       z-index: 310;
+      position: relative;
     }
     .achievement-item {
       background: #1e1e1e;
@@ -397,23 +389,21 @@
     .achievement-item.hidden {
       border-left-color: #9932cc;
     }
-    /* 隐藏元素 */
     .hidden {
       display: none !important;
     }
-    /* 音频控件隐藏 */
     audio {
       display: none;
     }
   </style>
 </head>
 <body>
-  <!-- 音频元素（用公共链接，无需本地文件） -->
-<audio id="gameBGM" src="https://cdn.freesound.org/previews/512/512010_10226511-lq.mp3" preload="auto" loop></audio>
-<audio id="ad1BGM" src="https://cdn.freesound.org/previews/671/671900_13732462-lq.mp3" preload="auto" loop></audio>
-<audio id="ad2BGM" src="https://cdn.freesound.org/previews/434/434210_8001201-lq.mp3" preload="auto" loop></audio>
-<audio id="correctSound" src="https://cdn.freesound.org/previews/580/580470_11750506-lq.mp3" preload="auto"></audio>
-<audio id="wrongSound" src="https://cdn.freesound.org/previews/342/342746_6103102-lq.mp3" preload="auto"></audio>
+  <!-- 音频元素（国内可访问免费链接，无需本地文件） -->
+  <audio id="gameBGM" src="https://music.163.com/song/media/outer/url?id=1395427736.mp3" preload="auto" loop></audio>
+  <audio id="ad1BGM" src="https://music.163.com/song/media/outer/url?id=1407552309.mp3" preload="auto" loop></audio>
+  <audio id="ad2BGM" src="https://music.163.com/song/media/outer/url?id=1868277153.mp3" preload="auto" loop></audio>
+  <audio id="correctSound" src="https://freesound.org/data/previews/580/580470_11750506-lq.mp3" preload="auto"></audio>
+  <audio id="wrongSound" src="https://freesound.org/data/previews/342/342746_6103102-lq.mp3" preload="auto"></audio>
 
   <!-- 游戏主容器 -->
   <div class="game-container">
@@ -454,7 +444,7 @@
       <button class="ad-close-btn" id="originalAdClose">×</button>
       <h3 class="ad-title">快❤️进❤️来❤️</h3>
       <div class="ad-cover">
-        <img src="广告封面.gif" alt="广告封面" id="adCoverGif">
+        <img src="https://picsum.photos/400/120" alt="广告封面" id="adCoverGif">
       </div>
       <a href="javascript:;" class="ad-cta" id="originalAdCta">点击查看随机广告图</a>
     </div>
@@ -507,20 +497,20 @@
 // ========== 配置项 ==========
     const CONFIG = {
       answerImages: {
-        '酒馆伙计': '酒馆伙计.png',
-        '宋': '宋.jpg',
-        '朝南': '朝南.jpg',
-        'Adams': 'Adams.jpg',
-        '正经衣服': '正经衣服.jpg',
-        'img1': 'img1.jpg',
-        'img2': 'img2.jpg',
-        'img3': 'img3.jpg',
-        'img4': 'img4.jpg'
+        '酒馆伙计': 'https://picsum.photos/200/200?random=1',
+        '宋': 'https://picsum.photos/200/200?random=2',
+        '朝南': 'https://picsum.photos/200/200?random=3',
+        'Adams': 'https://picsum.photos/200/200?random=4',
+        '正经衣服': 'https://picsum.photos/200/200?random=5',
+        'img1': 'https://picsum.photos/200/200?random=6',
+        'img2': 'https://picsum.photos/200/200?random=7',
+        'img3': 'https://picsum.photos/200/200?random=8',
+        'img4': 'https://picsum.photos/200/200?random=9'
       },
       adMaterials: {
-        original: ['广告.png', '广告2.jpg', '广告3.jpg'],
-        new: ['橙帕.jpg', '潮男帕.jpg', '潮男帕的后背.jpg'],
-        cover: '广告封面.gif'
+        original: ['https://picsum.photos/400/300?random=10', 'https://picsum.photos/400/300?random=11', 'https://picsum.photos/400/300?random=12'],
+        new: ['https://picsum.photos/400/300?random=13', 'https://picsum.photos/400/300?random=14', 'https://picsum.photos/400/300?random=15'],
+        cover: 'https://picsum.photos/400/120'
       },
       questions: [
         {id:0,text:'找出里面所有男同',type:'special',onSelect:()=>({ok:false,msg:'哈哈骗你的，我只设置了单选'})},
@@ -547,7 +537,7 @@
         goldCoin: {name:'爆点金币？',desc:'第一次选择朝南并答对',method:'首次回答「大富哥是哪位？」时选对朝南'},
         deepWaterCity: {name:'深水城故事',desc:'正确回答「选出真的不是直男的人」',method:'答对「选出真的不是直男的人」问题'},
         fashionIcon: {name:'衣品达人❤️',desc:'点开新添加的广告',method:'点击「♂♂火热换装」广告并查看'},
-        schiller: {name:'Schiller.',desc:'点开原有广告并看到广告.png',method:'点击原有广告且随机到广告.png时解锁'}
+        schiller: {name:'Schiller.',desc:'点开原有广告并看到指定图片',method:'点击原有广告且随机到第一张广告图时解锁'}
       },
       timeLimit: 8,
       scorePerCorrect: 5,
@@ -573,15 +563,13 @@
       triggeredScorePopups: new Set()
     };
 
-    // ========== DOM元素（确保所有id正确获取） ==========
+    // ========== DOM元素 ==========
     const el = {
-      // 音频
       gameBGM: document.getElementById('gameBGM'),
       ad1BGM: document.getElementById('ad1BGM'),
       ad2BGM: document.getElementById('ad2BGM'),
       correctSound: document.getElementById('correctSound'),
       wrongSound: document.getElementById('wrongSound'),
-      // 游戏核心
       questionText: document.getElementById('questionText'),
       roundNum: document.getElementById('roundNum'),
       optionsGrid: document.getElementById('optionsGrid'),
@@ -592,8 +580,7 @@
       resetBtn: document.getElementById('resetBtn'),
       achievementBtn: document.getElementById('achievementBtn'),
       resetAchieveBtn: document.getElementById('resetAchieveBtn'),
-      // 广告
-      originalAd:: document.getElementById('originalAd'),
+      originalAd: document.getElementById('originalAd'),
       originalAdClose: document.getElementById('originalAdClose'),
       originalAdCta: document.getElementById('originalAdCta'),
       newAd: document.getElementById('newAd'),
@@ -606,48 +593,39 @@
       adImgModal: document.getElementById('adImgModal'),
       adImgCloseBtn: document.getElementById('adImgCloseBtn'),
       adImgContent: document.getElementById('adImgContent'),
-      // 重置成就
       resetAchieveModal: document.getElementById('resetAchieveModal'),
       resetAchieveConfirm: document.getElementById('resetAchieveConfirm'),
       resetAchieveYeah: document.getElementById('resetAchieveYeah'),
-      // 成就墙
       achievementWall: document.getElementById('achievementWall'),
       achievementWallClose: document.getElementById('achievementWallClose'),
       achievementList: document.getElementById('achievementList')
     };
-// ========== 音频控制（修复移动端播放） ==========
+// ========== 音频控制（手机端兼容） ==========
     function playAudio(audioEl) {
       audioEl.currentTime = 0;
+      // 移动端强制用户交互后播放
       audioEl.play().catch(err => {
-        console.log('音频播放失败（需用户交互）:', err);
-        // 移动端强制通过用户交互初始化音频
-        document.body.addEventListener('click', () => {
-          audioEl.play();
-        }, { once: true });
+        document.body.addEventListener('click', () => audioEl.play(), { once: true });
       });
     }
 
     function playGameBGM() {
-      pauseAllBGM();
+      el.gameBGM.pause();
+      el.ad1BGM.pause();
+      el.ad2BGM.pause();
       playAudio(el.gameBGM);
     }
 
     function playAd1BGM() {
-      pauseAllBGM();
+      el.gameBGM.pause();
+      el.ad2BGM.pause();
       playAudio(el.ad1BGM);
     }
 
     function playAd2BGM() {
-      pauseAllBGM();
-      playAudio(el.ad2BGM);
-    }
-
-    function pauseAllBGM() {
       el.gameBGM.pause();
       el.ad1BGM.pause();
-      el.ad2BGM.pause();
-      el.ad1BGM.currentTime = 0;
-      el.ad2BGM.currentTime = 0;
+      playAudio(el.ad2BGM);
     }
 
     function playCorrectSound() {
@@ -701,8 +679,7 @@
 
     function showMessage(text, type = 'normal') {
       el.messageBox.textContent = text;
-      el.messageBox.className = 'message-box';
-      el.messageBox.classList.add(`msg-${type}`);
+      el.messageBox.className = `message-box msg-${type}`;
     }
 
     function toggleModal(modal, show) {
@@ -724,26 +701,30 @@
         unlockAchievement('maxScore');
       }
     }
-
 // ========== 游戏核心逻辑 ==========
     function initGame() {
-      // 绑定所有事件（修复移动端touch+click）
       bindAllEvents();
-      // 广告封面容错
       handleImageError(el.adCoverGif, '广告封面');
-      // 初始化成就墙
       renderAchievementWall();
-      // 重置游戏
       resetGame();
-      console.log('游戏初始化完成，所有事件绑定成功');
+      // 手机端首次点击激活音频
+      document.body.addEventListener('click', () => {
+        el.gameBGM.load();
+        el.ad1BGM.load();
+        el.ad2BGM.load();
+      }, { once: true });
     }
 
     function bindAllEvents() {
-      // 游戏按钮
+      // 游戏按钮（双事件绑定+兜底onclick）
       el.startBtn.addEventListener('click', startGame);
-      el.startBtn.addEventListener('touchstart', (e) => {e.preventDefault(); startGame();}, {passive: false});
+      el.startBtn.addEventListener('touchstart', (e) => {e.preventDefault(); startGame();}, { passive: false });
+      el.startBtn.onclick = startGame;
+
       el.resetBtn.addEventListener('click', resetGame);
-      el.resetBtn.addEventListener('touchstart', (e) => {e.preventDefault(); resetGame();}, {passive: false});
+      el.resetBtn.addEventListener('touchstart', (e) => {e.preventDefault(); resetGame();}, { passive: false });
+      el.resetBtn.onclick = resetGame;
+
       el.achievementBtn.addEventListener('click', () => {
         el.achievementWall.classList.add('show');
         renderAchievementWall();
@@ -752,18 +733,27 @@
         e.preventDefault();
         el.achievementWall.classList.add('show');
         renderAchievementWall();
-      }, {passive: false});
+      }, { passive: false });
+      el.achievementBtn.onclick = () => {
+        el.achievementWall.classList.add('show');
+        renderAchievementWall();
+      };
+
       el.achievementWallClose.addEventListener('click', () => el.achievementWall.classList.remove('show'));
       el.achievementWallClose.addEventListener('touchstart', (e) => {
         e.preventDefault();
         el.achievementWall.classList.remove('show');
-      }, {passive: false});
+      }, { passive: false });
+      el.achievementWallClose.onclick = () => el.achievementWall.classList.remove('show');
+
       // 重置成就
       el.resetAchieveBtn.addEventListener('click', () => toggleModal(el.resetAchieveModal, true));
       el.resetAchieveBtn.addEventListener('touchstart', (e) => {
         e.preventDefault();
         toggleModal(el.resetAchieveModal, true);
-      }, {passive: false});
+      }, { passive: false });
+      el.resetAchieveBtn.onclick = () => toggleModal(el.resetAchieveModal, true);
+
       el.resetAchieveConfirm.addEventListener('click', () => {
         resetAchievements(false);
         toggleModal(el.resetAchieveModal, false);
@@ -772,7 +762,12 @@
         e.preventDefault();
         resetAchievements(false);
         toggleModal(el.resetAchieveModal, false);
-      }, {passive: false});
+      }, { passive: false });
+      el.resetAchieveConfirm.onclick = () => {
+        resetAchievements(false);
+        toggleModal(el.resetAchieveModal, false);
+      };
+
       el.resetAchieveYeah.addEventListener('click', () => {
         resetAchievements(true);
         toggleModal(el.resetAchieveModal, false);
@@ -781,7 +776,12 @@
         e.preventDefault();
         resetAchievements(true);
         toggleModal(el.resetAchieveModal, false);
-      }, {passive: false});
+      }, { passive: false });
+      el.resetAchieveYeah.onclick = () => {
+        resetAchievements(true);
+        toggleModal(el.resetAchieveModal, false);
+      };
+
       // 广告事件
       bindAdEvents();
     }
@@ -796,10 +796,8 @@
       gameState.consecutiveImg1Count = 0;
       gameState.consecutiveNotImg3Count = 0;
       el.scoreNum.textContent = '0';
-      // 首次用户交互，初始化音频并播放游戏BGM
-      playGameBGM();
+      playGameBGM(); // 播放游戏BGM
       nextRound();
-      console.log('游戏开始，BGM播放');
     }
 
     function nextRound() {
@@ -849,12 +847,13 @@
         handleImageError(img, key);
         optionItem.appendChild(img);
 
-        // 绑定选项点击（touch+click）
+        // 选项点击（双事件+兜底）
         optionItem.addEventListener('click', handleOptionClick);
         optionItem.addEventListener('touchstart', (e) => {
           e.preventDefault();
           handleOptionClick.call(optionItem);
-        }, {passive: false});
+        }, { passive: false });
+        optionItem.onclick = handleOptionClick.bind(optionItem);
 
         el.optionsGrid.appendChild(optionItem);
       });
@@ -902,7 +901,7 @@
         gameState.consecutiveNotAdams = 0;
       }
 
-      // 原有成就判断
+      // 成就判断
       if (selectedKey === 'img1') {
         gameState.consecutiveImg1Count++;
         if (gameState.consecutiveImg1Count >= 4) {
@@ -919,7 +918,6 @@
         }
       } else gameState.consecutiveNotImg3Count = 0;
 
-      // 新增成就判断
       if (q.id === 4 && selectedKey === '酒馆伙计' && !gameState.hasGotPBrother) {
         unlockAchievement('pBrother');
         gameState.hasGotPBrother = true;
@@ -949,7 +947,9 @@
 
     function resetGame() {
       clearInterval(gameState.timer);
-      pauseAllBGM();
+      el.gameBGM.pause();
+      el.ad1BGM.pause();
+      el.ad2BGM.pause();
       gameState = {
         isPlaying: false,
         currentQuestion: null,
@@ -973,7 +973,6 @@
       el.questionText.textContent = '准备开始游戏';
       el.optionsGrid.innerHTML = '';
       showMessage('点击「开始游戏」开始挑战', 'normal');
-      console.log('游戏重置，音频暂停');
     }
 
     function resetAchievements(isYeah) {
@@ -999,14 +998,16 @@
         el.achievementList.appendChild(item);
       });
     }
-// ========== 广告逻辑（修改Schiller成就触发） ==========
+// ========== 广告逻辑（修复Schiller成就） ==========
     function bindAdEvents() {
       // 原有广告关闭
       el.originalAdClose.addEventListener('click', () => toggleModal(el.adConfirmModal, true));
       el.originalAdClose.addEventListener('touchstart', (e) => {
         e.preventDefault();
         toggleModal(el.adConfirmModal, true);
-      }, {passive: false});
+      }, { passive: false });
+      el.originalAdClose.onclick = () => toggleModal(el.adConfirmModal, true);
+
       // 原有广告CTA
       el.originalAdCta.addEventListener('click', () => {
         showRandomAdImg('original');
@@ -1016,7 +1017,12 @@
         e.preventDefault();
         showRandomAdImg('original');
         playAd1BGM();
-      }, {passive: false});
+      }, { passive: false });
+      el.originalAdCta.onclick = () => {
+        showRandomAdImg('original');
+        playAd1BGM();
+      };
+
       // 新广告关闭
       el.newAdClose.addEventListener('click', () => {
         el.newAd.style.display = 'none';
@@ -1028,7 +1034,13 @@
         el.newAd.style.display = 'none';
         showMessage('已关闭换装广告', 'normal');
         if (gameState.isPlaying) playGameBGM();
-      }, {passive: false});
+      }, { passive: false });
+      el.newAdClose.onclick = () => {
+        el.newAd.style.display = 'none';
+        showMessage('已关闭换装广告', 'normal');
+        if (gameState.isPlaying) playGameBGM();
+      };
+
       // 新广告CTA
       el.newAdCta.addEventListener('click', () => {
         showRandomAdImg('new');
@@ -1038,7 +1050,12 @@
         e.preventDefault();
         showRandomAdImg('new');
         playAd2BGM();
-      }, {passive: false});
+      }, { passive: false });
+      el.newAdCta.onclick = () => {
+        showRandomAdImg('new');
+        playAd2BGM();
+      };
+
       // 广告确认弹窗
       el.adConfirmBtn.addEventListener('click', () => {
         toggleModal(el.adConfirmModal, false);
@@ -1050,7 +1067,13 @@
         toggleModal(el.adConfirmModal, false);
         showRandomAdImg('original');
         playAd1BGM();
-      }, {passive: false});
+      }, { passive: false });
+      el.adConfirmBtn.onclick = () => {
+        toggleModal(el.adConfirmModal, false);
+        showRandomAdImg('original');
+        playAd1BGM();
+      };
+
       el.adCancelBtn.addEventListener('click', () => {
         toggleModal(el.adConfirmModal, false);
         el.originalAd.style.display = 'none';
@@ -1061,57 +1084,57 @@
         toggleModal(el.adConfirmModal, false);
         el.originalAd.style.display = 'none';
         showMessage('已关闭广告专区', 'normal');
-      }, {passive: false});
+      }, { passive: false });
+      el.adCancelBtn.onclick = () => {
+        toggleModal(el.adConfirmModal, false);
+        el.originalAd.style.display = 'none';
+        showMessage('已关闭广告专区', 'normal');
+      };
+
       // 广告图片弹窗关闭
       el.adImgCloseBtn.addEventListener('click', () => {
         toggleModal(el.adImgModal, false);
-        pauseAllBGM();
         if (gameState.isPlaying) playGameBGM();
       });
       el.adImgCloseBtn.addEventListener('touchstart', (e) => {
         e.preventDefault();
         toggleModal(el.adImgModal, false);
-        pauseAllBGM();
         if (gameState.isPlaying) playGameBGM();
-      }, {passive: false});
+      }, { passive: false });
+      el.adImgCloseBtn.onclick = () => {
+        toggleModal(el.adImgModal, false);
+        if (gameState.isPlaying) playGameBGM();
+      };
+
       // 点击空白处关闭广告弹窗
       el.adImgModal.addEventListener('click', (e) => {
         if (e.target === el.adImgModal) {
           toggleModal(el.adImgModal, false);
-          pauseAllBGM();
           if (gameState.isPlaying) playGameBGM();
         }
       });
     }
 
-    /**
-     * 修改Schiller成就触发：仅当original广告随机到广告.png时解锁
-     */
+    // Schiller成就：仅随机到第一张广告图时解锁
     function showRandomAdImg(type) {
       const adImgs = type === 'original' ? CONFIG.adMaterials.original : CONFIG.adMaterials.new;
       const randomImg = shuffleArray(adImgs)[0];
 
-      // 渲染广告图
       el.adImgContent.innerHTML = `<img src="${randomImg}" alt="广告图">`;
       const img = el.adImgContent.querySelector('img');
       handleImageError(img, '广告图');
 
-      // 显示弹窗
       toggleModal(el.adImgModal, true);
 
-      // 成就解锁逻辑
-      if (type === 'original') {
-        // 仅当随机到广告.png时解锁Schiller
-        if (randomImg === '广告.png') {
-          unlockAchievement('schiller');
-        }
-      } else {
-        // 新广告正常解锁衣品达人
+      // 成就解锁
+      if (type === 'original' && randomImg === CONFIG.adMaterials.original[0]) {
+        unlockAchievement('schiller');
+      } else if (type === 'new') {
         unlockAchievement('fashionIcon');
       }
     }
 
-    // ========== 初始化（确保DOM加载完成后执行） ==========
+    // 初始化（DOM加载完成后执行）
     document.addEventListener('DOMContentLoaded', initGame);
   </script>
 </body>
