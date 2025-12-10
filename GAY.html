@@ -60,7 +60,7 @@
     /* 遮罩层 */
     .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none}
     .overlay.show{display:block}
-    /* 成就墙样式（手机端适配） */
+    /* 成就墙样式（手机端适配+隐藏成就样式） */
     .achievement-wall{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;overflow-y:auto}
     .achievement-wall.hidden{display:none}
     .achievement-wall-header{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:760px;margin-bottom:20px}
@@ -68,7 +68,10 @@
     .achievement-list{width:100%;max-width:760px;display:flex;flex-direction:column;gap:12px}
     .achievement-item{background:var(--card);border-radius:10px;padding:16px;border:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;gap:16px}
     .achievement-item.locked{opacity:0.5}
-    .achievement-item.hidden{display:none !important}/* 隐藏成就不显示 */
+    /* 隐藏成就样式（解锁后显示特殊标记） */
+    .achievement-item.hidden-achievement{border:1px solid rgba(255,184,107,0.5);background:linear-gradient(180deg, rgba(255,184,107,0.05), rgba(255,184,107,0.02))}
+    .achievement-item.hidden-achievement .achievement-item-icon{background:var(--accent);color:#071025;box-shadow:0 0 15px rgba(255,184,107,0.5)}
+    .achievement-item.hidden-achievement .achievement-item-name{color:var(--accent);font-weight:700}
     .achievement-item-icon{width:44px;height:44px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;color:#071025}
     .achievement-item.locked .achievement-item-icon{background:var(--muted);color:var(--card)}
     .achievement-item-info{flex:1}
@@ -280,41 +283,41 @@
         }
       ];
 
-      // 成就配置（隐藏获得方法，新增3个成就）
+      // 成就配置（隐藏成就添加hidden标记，用于样式区分）
       const ACHIEVEMENTS = {
         straight: {
           icon: '💞',
           name: '我是直男',
           desc: '勇敢承认自己的身份',
-          method: '选择"找出图中的直男"题目中的直男选项', // 隐藏
+          method: '选择"找出图中的直男"题目中的直男选项',
           msg: '💞 你选择了直男选项，果然是纯纯的♂直男！'
         },
         gayPride: {
           icon: '🌈',
           name: '骄傲之GAY',
           desc: '为自己的身份感到骄傲',
-          method: '选择"找出图中的直男"题目中的GAY选项', // 隐藏
+          method: '选择"找出图中的直男"题目中的GAY选项',
           msg: '🌈 骄傲的GAY！为你感到自豪！'
         },
         chef: {
           icon: '👨‍🍳',
           name: '你是食材吗',
           desc: '找到真正的厨师',
-          method: '正确回答"找出真正的厨师"题目', // 隐藏
+          method: '正确回答"找出真正的厨师"题目',
           msg: '👨‍🍳 你找出了真正的厨师，小心被做成美食哦！'
         },
         therapist: {
           icon: '🧠',
           name: '心理治疗师',
           desc: '找到失去球棍的心理治疗师',
-          method: '正确回答"找出失去了球棍的心理治疗师"题目', // 隐藏
+          method: '正确回答"找出失去了球棍的心理治疗师"题目',
           msg: '🧠 找到心理治疗师了！需要聊聊你的感情问题吗？'
         },
         maxScore: {
           icon: '🏆',
           name: '天选男同🌈',
           desc: '达到满分100分',
-          method: '在游戏中获得100分', // 隐藏
+          method: '在游戏中获得100分',
           msg: '🏆 满分！你就是天选之子，男同之神！'
         },
         // 新增成就：好像忘了谁...（连续4次不选img3.jpg）
@@ -322,7 +325,7 @@
           icon: '❓',
           name: '好像忘了谁...',
           desc: '总觉得漏掉了什么重要的人',
-          method: '连续4次不选择img3.jpg图片', // 隐藏
+          method: '连续4次不选择img3.jpg图片',
           msg: '❓ 连续4次没选img3.jpg，你是不是忘了谁？'
         },
         // 新增成就：强人所难♂（连续4次选img1.jpg）
@@ -330,17 +333,17 @@
           icon: '🔄',
           name: '强人所难♂',
           desc: '对某个选项有着执着的偏爱',
-          method: '连续4次选择img1.jpg图片', // 隐藏
+          method: '连续4次选择img1.jpg图片',
           msg: '🔄 连续4次选img1.jpg，你这是强人所难啊！'
         },
-        // 新增隐藏成就：OMG♂（重置成就选yeah♂）
+        // 隐藏成就：OMG♂（重置成就选yeah♂）- 添加hidden标记
         omg: {
           icon: '😱',
           name: 'OMG♂',
           desc: '你发现了隐藏的秘密！',
-          method: '重置成就时选择"yeah♂"选项', // 隐藏
+          method: '重置成就时选择"yeah♂"选项',
           msg: '😱 OMG！你居然发现了隐藏成就！',
-          hidden: true // 不显示在成就墙
+          hidden: true // 隐藏成就标记，用于样式和渲染
         }
       };
 
@@ -392,7 +395,7 @@
       const achievementWallClose = document.getElementById('achievementWallClose');
       const achievementList = document.getElementById('achievementList');
 
-      // 游戏状态（新增统计、连续选择计数）
+      // 游戏状态
       let timeLeft = CONFIG.timeLimit;
       let timer = null;
       let score = 0;
@@ -406,25 +409,24 @@
       // 连续选择计数（用于新成就，按索引判断）
       let consecutiveImg1Count = 0; // 连续选img1.jpg（索引0）次数
       let consecutiveNotImg3Count = 0; // 连续不选img3.jpg（索引2）次数
-      // 成就状态（从本地存储读取，重置游戏不消失）
+      // 成就状态（从本地存储读取）
       let unlockedAchievements = new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []);
       let triggeredScorePopups = new Set(); // 已触发的分数弹窗集合
 
-      // 初始化成就墙（隐藏获得方法，不显示隐藏成就）
+      // 初始化成就墙（修复：显示隐藏成就，添加特殊样式）
       function initAchievementWall() {
         achievementList.innerHTML = '';
         Object.entries(ACHIEVEMENTS).forEach(([id, achievement]) => {
-          // 跳过隐藏成就（omg），彻底不显示在成就墙
-          if (achievement.hidden) return;
           const isUnlocked = unlockedAchievements.has(id);
+          // 构建成就项class：基础样式 + 锁定样式 + 隐藏成就样式
+          const achievementClass = `achievement-item ${isUnlocked ? '' : 'locked'} ${achievement.hidden ? 'hidden-achievement' : ''}`;
           const achievementItem = document.createElement('div');
-          achievementItem.className = `achievement-item ${isUnlocked ? '' : 'locked'}`;
+          achievementItem.className = achievementClass;
           achievementItem.innerHTML = `
             <div class="achievement-item-icon">${achievement.icon}</div>
             <div class="achievement-item-info">
               <h3 class="achievement-item-name">${achievement.name}</h3>
               <p class="achievement-item-desc">${achievement.desc}</p>
-              <!-- 获得方法隐藏 -->
               <span class="achievement-item-method">${achievement.method}</span>
             </div>
           `;
@@ -432,7 +434,7 @@
         });
       }
 
-      // 显示/隐藏成就墙（仅初始界面显示）
+      // 显示/隐藏成就墙
       function toggleAchievementWall(show) {
         if (show) {
           achievementWall.classList.remove('hidden');
@@ -475,11 +477,10 @@
         showPopup(scorePopup);
       }
 
-      // 解锁成就（存储到本地，重置游戏不消失）
+      // 解锁成就
       function unlockAchievement(achievementId) {
         if (unlockedAchievements.has(achievementId)) return;
         unlockedAchievements.add(achievementId);
-        // 存储到本地存储
         localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(unlockedAchievements)));
 
         const achievement = ACHIEVEMENTS[achievementId];
@@ -488,12 +489,11 @@
           achievementDesc.textContent = achievement.desc;
           achievementMsg.textContent = achievement.msg;
           showPopup(achievementPopup);
-          // 更新成就墙（隐藏成就不会被添加）
-          initAchievementWall();
+          initAchievementWall(); // 更新成就墙显示
         }
       }
 
-      // 重置成就（仅手动重置时触发）
+      // 重置成就
       function resetAchievements() {
         unlockedAchievements.clear();
         localStorage.removeItem('unlockedAchievements');
@@ -501,31 +501,33 @@
         showMessage('成就已重置', 'win');
       }
 
-      // 随机打乱数组
+      // 随机打乱数组（修复：确保图片与原始索引一一对应）
       function shuffleArr(arr) {
         const newArr = [...arr];
-        const indexes = Array.from(arr.keys());
+        const indexes = [...arr.keys()]; // 正确生成原始索引数组（0,1,2,3）
         for (let i = newArr.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
+          // 同时打乱图片和索引，保持对应关系
           [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
           [indexes[i], indexes[j]] = [indexes[j], indexes[i]];
         }
         return { arr: newArr, indexes };
       }
 
-      // 渲染游戏网格（按索引判断，移除imgSrc传入）
+      // 渲染游戏网格（修复：正确设置原始索引）
       function renderGrid() {
         gridEl.innerHTML = '';
         const { arr: shuffledImgs, indexes: originalIndexes } = shuffleArr(CONFIG.images);
         shuffledImgs.forEach((imgSrc, i) => {
           const cell = document.createElement('div');
           cell.className = 'cell';
+          // 正确设置图片原始索引（0=img1,1=img2,2=img3,3=img4）
           cell.setAttribute('data-original-idx', originalIndexes[i]);
           const img = document.createElement('img');
           img.src = imgSrc;
           img.alt = `角色${i+1}`;
           cell.appendChild(img);
-          // 手机端触摸优先，仅传cell
+          // 手机端触摸优先
           cell.ontouchend = (e) => {
             e.preventDefault();
             handleCellClick(cell);
@@ -556,7 +558,7 @@
             playable = false;
             wrongCount++;
             showMessage('杂鱼 慢死了', 'lose');
-            // 重置连续选择计数
+            // 重置连续计数
             consecutiveImg1Count = 0;
             consecutiveNotImg3Count = 0;
             setTimeout(() => gameActive && startRound(), 1000);
@@ -564,30 +566,28 @@
         }, 1000);
       }
 
-      // 处理单元格点击（修复成就触发+满分提示）
+      // 处理单元格点击（修复：成就触发逻辑+计数重置时机）
       function handleCellClick(cell) {
         if (!playable) return;
         playable = false;
         clearInterval(timer);
+        // 正确获取图片原始索引（0-3，对应img1-img4）
         const originalIdx = Number(cell.getAttribute('data-original-idx'));
         const res = currentQuestion.onSelect ? currentQuestion.onSelect(originalIdx) : null;
 
-        // ========== 修复：按索引判断成就触发，独立统计 ==========
-        // 强人所难♂：仅选img1.jpg（索引0）累加，选其他重置
+        // 成就计数逻辑（按索引精准判断）
         if (originalIdx === 0) {
           consecutiveImg1Count++;
         } else {
           consecutiveImg1Count = 0;
         }
-
-        // 好像忘了谁...：仅选非img3.jpg（索引2）累加，选img3重置
         if (originalIdx !== 2) {
           consecutiveNotImg3Count++;
         } else {
           consecutiveNotImg3Count = 0;
         }
 
-        // 解锁成就（触发后重置计数，避免重复）
+        // 解锁成就（触发后重置计数）
         if (consecutiveImg1Count >= 4) {
           unlockAchievement('forceful');
           consecutiveImg1Count = 0;
@@ -596,19 +596,17 @@
           unlockAchievement('forgotWho');
           consecutiveNotImg3Count = 0;
         }
-        // =======================================================
 
-        // ========== 修复：满分后所有选项都显示极限提示 ==========
+        // 满分提示逻辑
         if (score >= CONFIG.maxScore) {
           showMessage('已经...极限了♂♂♂', 'limit');
-          // 弹窗显示时不自动进入下一轮
           if (!scorePopup.classList.contains('show') && !achievementPopup.classList.contains('show') && !endGameConfirmPopup.classList.contains('show')) {
             setTimeout(() => gameActive && startRound(), 1000);
           }
-          return; // 直接返回，不再执行后续分数逻辑
+          return;
         }
-        // =======================================================
 
+        // 答题结果逻辑（修复：仅无弹窗时重置计数）
         if (currentQuestion.type === 'single') {
           if (originalIdx === currentQuestion.correctIdx) {
             correctCount++;
@@ -616,20 +614,20 @@
             if (score > CONFIG.maxScore) score = CONFIG.maxScore;
             scoreEl.textContent = score;
             showMessage(currentQuestion.onCorrect, 'win');
-            // 检查分数里程碑
             if (score === 50 || score === CONFIG.maxScore) {
               showScorePopup(score);
             }
-            // 检查成就解锁
             if (currentQuestion.achievement) {
               unlockAchievement(currentQuestion.achievement);
             }
           } else {
             wrongCount++;
             showMessage(currentQuestion.onWrong, 'lose');
-            // 重置连续选择计数
-            consecutiveImg1Count = 0;
-            consecutiveNotImg3Count = 0;
+            // 仅在无弹窗时重置计数，避免连续点击中断
+            if (!scorePopup.classList.contains('show') && !achievementPopup.classList.contains('show') && !endGameConfirmPopup.classList.contains('show')) {
+              consecutiveImg1Count = 0;
+              consecutiveNotImg3Count = 0;
+            }
           }
         } else if (res) {
           if (res.ok) {
@@ -638,16 +636,17 @@
             score += CONFIG.pointsPerCorrect;
             if (score > CONFIG.maxScore) score = CONFIG.maxScore;
             scoreEl.textContent = score;
-            // 检查分数里程碑
             if (score === 50 || score === CONFIG.maxScore) {
               showScorePopup(score);
             }
           } else {
             wrongCount++;
             showMessage(res.msg, 'lose');
-            // 重置连续选择计数
-            consecutiveImg1Count = 0;
-            consecutiveNotImg3Count = 0;
+            // 仅在无弹窗时重置计数
+            if (!scorePopup.classList.contains('show') && !achievementPopup.classList.contains('show') && !endGameConfirmPopup.classList.contains('show')) {
+              consecutiveImg1Count = 0;
+              consecutiveNotImg3Count = 0;
+            }
           }
         }
 
@@ -666,10 +665,9 @@
         else if (type === 'limit') messageEl.classList.add('limit');
       }
 
-      // 重置游戏（不重置成就，仅重置游戏数据）
+      // 重置游戏
       function resetGame() {
         if (timer) clearInterval(timer);
-        // 不重置成就，仅重置游戏数据
         score = 0;
         round = 0;
         timeLeft = CONFIG.timeLimit;
@@ -682,12 +680,10 @@
         roundEl.textContent = '—';
         gridEl.innerHTML = '';
         showMessage('点击"开始♂游戏"开始挑战', '');
-        btnEndGame.style.display = 'none'; // 隐藏结束游戏按钮
-        // 显示成就墙入口
+        btnEndGame.style.display = 'none';
         btnAchievementWall.style.display = 'inline-block';
         btnResetAchieve.style.display = 'inline-block';
         gameActive = false;
-        // 重置弹窗触发状态
         triggeredScorePopups.clear();
         // 关闭所有弹窗
         closePopup(scorePopup);
@@ -721,7 +717,6 @@
       // 取消结束游戏
       function cancelEndGame() {
         closePopup(endGameConfirmPopup);
-        // 继续游戏
         if (gameActive) {
           playable = true;
           timer = setInterval(() => {
@@ -777,13 +772,11 @@
         document.querySelector('footer.ad').style.display = 'none';
       }
 
-      // 事件绑定
-      // 开始游戏
+      // 事件绑定（手机端触摸优先）
       btnStart.ontouchend = (e) => {
         e.preventDefault();
         gameActive = true;
-        btnEndGame.style.display = 'inline-block'; // 显示结束游戏按钮
-        // 隐藏成就墙入口
+        btnEndGame.style.display = 'inline-block';
         btnAchievementWall.style.display = 'none';
         btnResetAchieve.style.display = 'none';
         startRound();
@@ -796,35 +789,30 @@
         startRound();
       };
 
-      // 重置游戏
       btnRestart.ontouchend = (e) => {
         e.preventDefault();
         resetGame();
       };
       btnRestart.onclick = resetGame;
 
-      // 结束游戏（弹出确认框）
       btnEndGame.ontouchend = (e) => {
         e.preventDefault();
         showEndGameConfirm();
       };
       btnEndGame.onclick = showEndGameConfirm;
 
-      // 确认结束游戏
       btnConfirmEnd.ontouchend = (e) => {
         e.preventDefault();
         confirmEndGame();
       };
       btnConfirmEnd.onclick = confirmEndGame;
 
-      // 取消结束游戏
       btnCancelEnd.ontouchend = (e) => {
         e.preventDefault();
         cancelEndGame();
       };
       btnCancelEnd.onclick = cancelEndGame;
 
-      // 结束游戏统计弹窗返回主页
       statsPopupBtn.ontouchend = (e) => {
         e.preventDefault();
         closePopup(endGameStatsPopup);
@@ -835,35 +823,30 @@
         resetGame();
       };
 
-      // 重置成就（弹出确认框）
       btnResetAchieve.ontouchend = (e) => {
         e.preventDefault();
         showResetAchieveConfirm();
       };
       btnResetAchieve.onclick = showResetAchieveConfirm;
 
-      // 确认重置成就（选"是"）
       btnConfirmReset.ontouchend = (e) => {
         e.preventDefault();
         confirmResetAchieve();
       };
       btnConfirmReset.onclick = confirmResetAchieve;
 
-      // 重置成就选"yeah♂"
       btnYeahReset.ontouchend = (e) => {
         e.preventDefault();
         yeahResetAchieve();
       };
       btnYeahReset.onclick = yeahResetAchieve;
 
-      // 广告关闭
       adCloseBtn.ontouchend = (e) => {
         e.preventDefault();
         adCloseModal.classList.add('show');
       };
       adCloseBtn.onclick = () => adCloseModal.classList.add('show');
 
-      // 模态框选项
       btnAdOption1.ontouchend = (e) => {
         e.preventDefault();
         openAd();
@@ -882,7 +865,6 @@
       };
       btnAdOption3.onclick = closeAdWithTaunt;
 
-      // 弹窗按钮
       scorePopupBtn.ontouchend = (e) => {
         e.preventDefault();
         closePopup(scorePopup);
@@ -911,7 +893,6 @@
         }
       };
 
-      // 成就墙相关
       btnAchievementWall.ontouchend = (e) => {
         e.preventDefault();
         toggleAchievementWall(true);
@@ -924,7 +905,6 @@
       };
       achievementWallClose.onclick = () => toggleAchievementWall(false);
 
-      // 模态框背景关闭
       adCloseModal.ontouchend = (e) => {
         if (e.target === adCloseModal) adCloseModal.classList.remove('show');
       };
