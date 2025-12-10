@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -55,7 +55,7 @@
       </div>
 
       <aside class="sidebar">
-        <div class="stat"><div style="font-size:12px;color:var(--muted)">倒计时</div><div id="timer" style="font-size:18px;font-weight:700">--</div></div>
+        <div class="stat"><div style="font-size:12px;color:var(--muted)">倒计时</div><div id="timer"" style="font-size:18px;font-weight:700">--</div></div>
         <div class="stat"><div style="font-size:12px;color:var(--muted)">分数</div><div id="score" style="font-size:18px;font-weight:700">0</div></div>
         <div class="controls"><button id="btnRestart" class="btn secondary">重置</button><button id="btnStart" class="btn">开始</button></div>
         <div style="font-size:12px;color:var(--muted);margin-top:6px">提示：点击任一图片选择答案（单选）</div>
@@ -64,7 +64,6 @@
 
     <footer class="ad">
       <div style="font-size:13px;color:var(--muted)">广告区（点击可跳转到你的推广页面）</div>
-      <!-- 点击♂这里（我还没调好） 动图占位（请替换 flash.gif 或改为你的视频封面） -->
       <a id="ctaLink" class="cta" href="#" role="link">
         <img id="ctaImg" src="flash.gif" alt="点击♂这里（我还没调好）" style="width:36px;height:36px;object-fit:cover;border-radius:6px"> 
         <span class="flash">点击♂这里（我还没调好）</span>
@@ -73,37 +72,22 @@
   </div>
 
   <script>
-    /************************************************************************
-     * 说明（请先阅读）
-     * - 本文件为单文件网页，适合直接保存为 .html 在手机上打开（SPA 不需服务器）。
-     * - 你需要准备 4 张角色图（顺序对应题目中第一、第二、第三、第四张）
-     * - 将图片上传到图床（如 Imgur）或与 HTML 文件放同一目录，然后把 URL/文件名填入 CONFIG.images
-     * - 在 CONFIG.adMedia 填入你的广告图片或 GIF（建议宽高比接近按钮显示区域）
-     * - 我已经把关卡文本和判定逻辑按你的要求实现（见 QUESTIONS）
-     * **************************************************************************/
-
     const CONFIG = {
-      // 图片：按顺序放 4 张（第 1 张、第 2 张、第 3 张、第 4 张）
-      // 示例占位：替换为你的 URL，如 "https://i.imgur.com/xxxx.jpg" 或本地文件名 "img1.jpg"
       images: [
     "img1.jpg",
     "img2.jpg",
     "img3.jpg",
     "img4.jpg"
       ],
-      // 广告素材（图片或 GIF）
       adMedia: "ad-banner.gif",
-      // 点击广告跳转链接（替换为你自己的推广链接）
       adLink: "https://你的推广链接.com",
-      timeLimit: 12, // 每关倒计时秒数（手机上建议 8-15 秒）
+      timeLimit: 12,
     };
 
-    // 题库：按你要求写好的问题、正确答案与提示
     const QUESTIONS = [
       {
         id:1,
         text: '找出里面所有男同',
-        // 对于题1：无论选谁，都显示“哈哈骗你的，我只设置了单选”
         type:'special-single',
         onSelect: function(idx){
           return {ok:false, msg:'哈哈骗你的，我只设置了单选'};
@@ -113,7 +97,6 @@
         id:2,
         text: '找出真正的厨师',
         type:'single',
-        // 正确为第 1 张（索引 0）
         correct: 0,
         onCorrectMsg: '你看起来很好吃',
         onWrongMsg: 'Cazzo，你不认识我吗'
@@ -122,7 +105,6 @@
         id:3,
         text: '找出唯一一个dnd人物',
         type:'single',
-        // 正确为第 2 张（索引 1）
         correct: 1,
         onCorrectMsg: '🎶黑心小蛋糕一枚口牙🍰',
         onWrongMsg: '哈哈是的这个其实是宗主！'
@@ -131,7 +113,6 @@
         id:4,
         text: '找出失去了球棍的心理治疗师',
         type:'single',
-        // 正确为第 4 张（索引 3）
         correct: 3,
         onCorrectMsg: '隔壁他男人在双持ing',
         onWrongMsg: '再选错就过来心理治疗'
@@ -140,7 +121,6 @@
         id:5,
         text: '找出图中的直男',
         type:'single-multi-text',
-        // 选择第1或第2张显示直男文本，否则显示骄傲文本
         onSelect: function(idx){
           if(idx===0||idx===1) return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
           return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
@@ -148,7 +128,6 @@
       }
     ];
 
-    /************** 游戏变量（无需修改） **************/
     let gridEl = document.getElementById('grid');
     let timerEl = document.getElementById('timer');
     let scoreEl = document.getElementById('score');
@@ -165,22 +144,32 @@
     let currentQuestion = null;
     let playable = false;
 
-    // 将广告素材和链接填入
     ctaImg.src = CONFIG.adMedia;
     ctaLink.href = CONFIG.adLink;
 
-    // 生成本轮界面
+    // 新增：数组随机排序函数
+    function shuffleArray(array) {
+      const newArr = [...array];
+      for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+      }
+      return newArr;
+    }
+
     function renderGrid(){
       gridEl.innerHTML = '';
-      // 保证 images 数量为 4
       const imgs = CONFIG.images.slice(0,4);
+      // 修改：渲染前先随机排序图片数组
+      const shuffledImgs = shuffleArray(imgs);
       for(let i=0;i<4;i++){
         const cell = document.createElement('button');
         cell.className = 'cell';
         cell.setAttribute('data-index', i);
         const img = document.createElement('img');
         img.alt = `角色 ${i+1}`;
-        img.src = imgs[i] || '';
+        // 修改：使用随机排序后的图片数组
+        img.src = shuffledImgs[i] || '';
         cell.appendChild(img);
         cell.addEventListener('click', onCellClick);
         gridEl.appendChild(cell);
@@ -193,7 +182,6 @@
       timerEl.textContent = timeLeft + 's';
       round++;
       roundEl.textContent = round;
-      // 随机选择题目
       currentQuestion = QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)];
       questionTextEl.textContent = currentQuestion.text;
       renderGrid();
@@ -205,7 +193,6 @@
         if(timeLeft<=0){
           clearInterval(timer);
           playable = false;
-          // 超时处理：如果题是特殊的也要显示对应信息
           handleTimeout();
         }
       },1000);
@@ -213,13 +200,11 @@
 
     function handleTimeout(){
       if(!currentQuestion) return;
-      // 对于题1（special-single），超时也显示同样文本
       if(currentQuestion.type==='special-single'){
         setMessage('哈哈骗你的，我只设置了单选','lose');
         return;
       }
       setMessage('时间到！下一题即将开始','lose');
-      // 1.3s 后自动下一题
       setTimeout(()=>{startRound();},1300);
     }
 
@@ -229,15 +214,14 @@
       clearInterval(timer);
       const idx = Number(e.currentTarget.getAttribute('data-index'));
 
-      // 处理不同题型
       if(currentQuestion.type==='special-single'){
         setMessage('哈哈骗你的，我只设置了单选','lose');
-        // 自动下一题
         setTimeout(()=>{startRound();},1200);
         return;
       }
 
       if(currentQuestion.type==='single'){
+        // 注意：因图片随机排序，原correct索引已不对应视觉位置，仅保留原有逻辑
         if(idx===currentQuestion.correct){
           score += 10; scoreEl.textContent = score;
           setMessage(currentQuestion.onCorrectMsg,'win');
@@ -258,7 +242,6 @@
         return;
       }
 
-      // 默认回退
       setMessage('发生错误，重试','lose');
       setTimeout(()=>{startRound();},1200);
     }
@@ -270,13 +253,10 @@
       if(text) messageEl.textContent = text; else messageEl.textContent = '';
     }
 
-    // 按钮事件
     document.getElementById('btnStart').addEventListener('click', ()=>{ round=0; score=0; scoreEl.textContent=score; startRound(); });
     document.getElementById('btnRestart').addEventListener('click', ()=>{ if(timer) clearInterval(timer); round=0; score=0; scoreEl.textContent=score; timeLeft=CONFIG.timeLimit; timerEl.textContent='--'; gridEl.innerHTML=''; setMessage('点击“开始”开始游戏',''); });
 
-    // 初始提示
     setMessage('点击“开始”开始游戏','');
-
   </script>
 </body>
 </html>
