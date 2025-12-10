@@ -55,7 +55,7 @@
       </div>
 
       <aside class="sidebar">
-        <div class="stat"><div style="font-size:12px;color:var(--muted)">倒计时</div><div id="timer"" style="font-size:18px;font-weight:700">--</div></div>
+        <div class="stat"><div style="font-size:12px;color:var(--muted)">倒计时</div><div id="timer" style="font-size:18px;font-weight:700">--</div></div>
         <div class="stat"><div style="font-size:12px;color:var(--muted)">分数</div><div id="score" style="font-size:18px;font-weight:700">0</div></div>
         <div class="controls"><button id="btnRestart" class="btn secondary">重置</button><button id="btnStart" class="btn">开始</button></div>
         <div style="font-size:12px;color:var(--muted);margin-top:6px">提示：点击任一图片选择答案（单选）</div>
@@ -74,10 +74,10 @@
   <script>
     const CONFIG = {
       images: [
-    "img1.jpg",
-    "img2.jpg",
-    "img3.jpg",
-    "img4.jpg"
+        "img1.jpg",
+        "img2.jpg",
+        "img3.jpg",
+        "img4.jpg"
       ],
       adMedia: "ad-banner.gif",
       adLink: "https://你的推广链接.com",
@@ -97,7 +97,8 @@
         id:2,
         text: '找出真正的厨师',
         type:'single',
-        correct: 0,
+        // 改为原始图片索引（不是视觉位置）
+        correctOriginalIndex: 0,
         onCorrectMsg: '你看起来很好吃',
         onWrongMsg: 'Cazzo，你不认识我吗'
       },
@@ -105,7 +106,7 @@
         id:3,
         text: '找出唯一一个dnd人物',
         type:'single',
-        correct: 1,
+        correctOriginalIndex: 1,
         onCorrectMsg: '🎶黑心小蛋糕一枚口牙🍰',
         onWrongMsg: '哈哈是的这个其实是宗主！'
       },
@@ -113,16 +114,17 @@
         id:4,
         text: '找出失去了球棍的心理治疗师',
         type:'single',
-        correct: 3,
-        onCorrectMsg: '隔壁他男人在双持ing',
-        onWrongMsg: '再选错就过来心理治疗'
+        correctOriginalIndex: 3,
+        onWrongMsg: '再选错就过来心理治疗',
+        onCorrectMsg: '隔壁他男人在双持ing'
       },
       {
         id:5,
         text: '找出图中的直男',
         type:'single-multi-text',
-        onSelect: function(idx){
-          if(idx===0||idx===1) return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
+        // 改为匹配原始索引
+        onSelect: function(originalIndex){
+          if(originalIndex===0||originalIndex===1) return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
           return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
         }
       }
@@ -143,33 +145,38 @@
     let round = 0;
     let currentQuestion = null;
     let playable = false;
+    // 存储本轮随机后的图片原始索引映射
+    let shuffledOriginalIndexes = [];
 
     ctaImg.src = CONFIG.adMedia;
     ctaLink.href = CONFIG.adLink;
 
-    // 新增：数组随机排序函数
-    function shuffleArray(array) {
+    // 数组随机排序（返回排序后的数组和原始索引映射）
+    function shuffleArrayWithIndex(array) {
       const newArr = [...array];
+      const originalIndexes = Array.from(array.keys());
       for (let i = newArr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+        [originalIndexes[i], originalIndexes[j]] = [originalIndexes[j], originalIndexes[i]];
       }
-      return newArr;
+      return { shuffledArr: newArr, originalIndexes: originalIndexes };
     }
 
     function renderGrid(){
       gridEl.innerHTML = '';
       const imgs = CONFIG.images.slice(0,4);
-      // 修改：渲染前先随机排序图片数组
-      const shuffledImgs = shuffleArray(imgs);
+      // 随机排序并获取原始索引映射
+      const { shuffledArr, originalIndexes } = shuffleArrayWithIndex(imgs);
+      shuffledOriginalIndexes = originalIndexes;
       for(let i=0;i<4;i++){
         const cell = document.createElement('button');
         cell.className = 'cell';
-        cell.setAttribute('data-index', i);
+        // 存储视觉索引（用于点击获取）
+        cell.setAttribute('data-visual-index', i);
         const img = document.createElement('img');
         img.alt = `角色 ${i+1}`;
-        // 修改：使用随机排序后的图片数组
-        img.src = shuffledImgs[i] || '';
+        img.src = shuffledArr[i] || '';
         cell.appendChild(img);
         cell.addEventListener('click', onCellClick);
         gridEl.appendChild(cell);
@@ -212,7 +219,10 @@
       if(!playable) return;
       playable = false;
       clearInterval(timer);
-      const idx = Number(e.currentTarget.getAttribute('data-index'));
+      // 获取点击的视觉索引
+      const visualIndex = Number(e.currentTarget.getAttribute('data-visual-index'));
+      // 通过视觉索引获取原始索引
+      const originalIndex = shuffledOriginalIndexes[visualIndex];
 
       if(currentQuestion.type==='special-single'){
         setMessage('哈哈骗你的，我只设置了单选','lose');
@@ -221,8 +231,8 @@
       }
 
       if(currentQuestion.type==='single'){
-        // 注意：因图片随机排序，原correct索引已不对应视觉位置，仅保留原有逻辑
-        if(idx===currentQuestion.correct){
+        // 匹配原始索引判定正确答案
+        if(originalIndex===currentQuestion.correctOriginalIndex){
           score += 10; scoreEl.textContent = score;
           setMessage(currentQuestion.onCorrectMsg,'win');
         } else {
@@ -233,7 +243,7 @@
       }
 
       if(currentQuestion.type==='single-multi-text'){
-        const res = currentQuestion.onSelect(idx);
+        const res = currentQuestion.onSelect(originalIndex);
         if(res){
           if(res.ok){ score += 6; scoreEl.textContent = score; setMessage(res.msg,'win'); }
           else setMessage(res.msg,'lose');
