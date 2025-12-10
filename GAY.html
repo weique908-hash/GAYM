@@ -399,11 +399,11 @@
 </head>
 <body>
   <!-- 音频元素（国内可访问免费链接，无需本地文件） -->
-  <audio id="gameBGM" src="https://music.163.com/song/media/outer/url?id=1395427736.mp3" preload="auto" loop></audio>
-  <audio id="ad1BGM" src="https://music.163.com/song/media/outer/url?id=1407552309.mp3" preload="auto" loop></audio>
-  <audio id="ad2BGM" src="https://music.163.com/song/media/outer/url?id=1868277153.mp3" preload="auto" loop></audio>
-  <audio id="correctSound" src="https://freesound.org/data/previews/580/580470_11750506-lq.mp3" preload="auto"></audio>
-  <audio id="wrongSound" src="https://freesound.org/data/previews/342/342746_6103102-lq.mp3" preload="auto"></audio>
+  <audio id="gameBGM" src="https://music.163.com/song/media/outer/url?id=1395427736.mp3" preload="auto" loop>
+  <audio id="ad1BGM" src="https://music.163.com/song/media/outer/url?id=1407552309.mp3" preload="auto" loop>
+  <audio id="ad2BGM" src="https://music.163.com/song/media/outer/url?id=1868277153.mp3" preload="auto" loop>
+  <audio id="correctSound" src="https://freesound.org/data/previews/580/580470_11750506-lq.mp3" preload="auto">
+  <audio id="wrongSound" src="https://freesound.org/data/previews/342/342746_6103102-lq.mp3" preload="auto">
 
   <!-- 游戏主容器 -->
   <div class="game-container">
@@ -444,7 +444,7 @@
       <button class="ad-close-btn" id="originalAdClose">×</button>
       <h3 class="ad-title">快❤️进❤️来❤️</h3>
       <div class="ad-cover">
-        <img src="https://picsum.photos/400/120" alt="广告封面" id="adCoverGif">
+        <img src="广告封面.gif" alt="广告封面" id="adCoverGif">
       </div>
       <a href="javascript:;" class="ad-cta" id="originalAdCta">点击查看随机广告图</a>
     </div>
@@ -456,7 +456,8 @@
       <a href="javascript:;" class="ad-cta" id="newAdCta">点击查看精彩内容</a>
     </div>
   </div>
-<!-- 广告关闭确认弹窗 -->
+
+  <!-- 广告关闭确认弹窗 -->
   <div class="modal-overlay hidden" id="adConfirmModal">
     <div class="modal-container">
       <h3 class="modal-title">不进来看看吗？</h3>
@@ -497,20 +498,23 @@
 // ========== 配置项 ==========
     const CONFIG = {
       answerImages: {
-        '酒馆伙计': 'https://picsum.photos/200/200?random=1',
-        '宋': 'https://picsum.photos/200/200?random=2',
-        '朝南': 'https://picsum.photos/200/200?random=3',
-        'Adams': 'https://picsum.photos/200/200?random=4',
-        '正经衣服': 'https://picsum.photos/200/200?random=5',
-        'img1': 'https://picsum.photos/200/200?random=6',
-        'img2': 'https://picsum.photos/200/200?random=7',
-        'img3': 'https://picsum.photos/200/200?random=8',
-        'img4': 'https://picsum.photos/200/200?random=9'
+        '酒馆伙计': '酒馆伙计.png',
+        '宋': '宋.jpg',
+        '朝南': '朝南.jpg',
+        'Adams': 'Adams.jpg',
+        '正经衣服': '正经衣服.jpg',
+        'img1': 'img1.jpg',
+        'img2': 'img2.jpg',
+        'img3': 'img3.jpg',
+        'img4': 'img4.jpg',
+        '橙帕': '橙帕.jpg',
+        '潮男帕': '潮男帕.jpg',
+        '潮男帕的后背': '潮男帕的后背.jpg'
       },
       adMaterials: {
-        original: ['https://picsum.photos/400/300?random=10', 'https://picsum.photos/400/300?random=11', 'https://picsum.photos/400/300?random=12'],
-        new: ['https://picsum.photos/400/300?random=13', 'https://picsum.photos/400/300?random=14', 'https://picsum.photos/400/300?random=15'],
-        cover: 'https://picsum.photos/400/120'
+        original: ['广告.png', '广告2.jpg', '广告3.jpg'],
+        new: ['橙帕.jpg', '潮男帕.jpg', '潮男帕的后背.jpg'],
+        cover: '广告封面.gif'
       },
       questions: [
         {id:0,text:'找出里面所有男同',type:'special',onSelect:()=>({ok:false,msg:'哈哈骗你的，我只设置了单选'})},
@@ -701,7 +705,8 @@
         unlockAchievement('maxScore');
       }
     }
-// ========== 游戏核心逻辑 ==========
+
+    // ========== 游戏核心逻辑 ==========
     function initGame() {
       bindAllEvents();
       handleImageError(el.adCoverGif, '广告封面');
@@ -858,8 +863,7 @@
         el.optionsGrid.appendChild(optionItem);
       });
     }
-
-    function handleOptionClick() {
+function handleOptionClick() {
       if (!gameState.isPlaying) return;
       clearInterval(gameState.timer);
       gameState.isPlaying = false;
@@ -998,7 +1002,8 @@
         el.achievementList.appendChild(item);
       });
     }
-// ========== 广告逻辑（修复Schiller成就） ==========
+
+    // ========== 广告逻辑（修复Schiller成就） ==========
     function bindAdEvents() {
       // 原有广告关闭
       el.originalAdClose.addEventListener('click', () => toggleModal(el.adConfirmModal, true));
