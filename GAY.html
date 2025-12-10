@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>你好啊我是男同</title>
   <style>
     :root{--bg:#0f1724;--card:#0b1220;--accent:#ffb86b;--muted:#94a3b8;--win:#34d399;--lose:#fb7185;font-family:Inter,system-ui,Arial}
@@ -287,457 +287,430 @@
   </div>
 
   <script>
-    const CONFIG = {
-      images: [
-        "img1.jpg",
-        "img2.jpg",
-        "img3.jpg",
-        "img4.jpg"
-      ],
-      adMedia: "ad-banner.gif",
-      adLink: "https://你的推广链接.com",
-      timeLimit: 8,
-      maxScore: 100,
-      pointsPerCorrect: 5,
-    };
+    document.addEventListener('DOMContentLoaded', function() {
+      const CONFIG = {
+        images: [
+          "img1.jpg",
+          "img2.jpg",
+          "img3.jpg",
+          "img4.jpg"
+        ],
+        adMedia: "ad-banner.gif",
+        adLink: "https://你的推广链接.com",
+        timeLimit: 8,
+        maxScore: 100,
+        pointsPerCorrect: 5,
+      };
 
-    const QUESTIONS = [
-      {
-        id:1,
-        text: '找出里面所有男同',
-        type:'special-single',
-        onSelect: function(idx){
-          return {ok:false, msg:'哈哈骗你的，我只设置了单选'};
-        }
-      },
-      {
-        id:2,
-        text: '找出真正的厨师',
-        type:'single',
-        correctOriginalIndex: 0,
-        onCorrectMsg: '你看起来很好吃',
-        onWrongMsg: 'Cazzo，你不认识我吗',
-        achievement: 'chef'
-      },
-      {
-        id:3,
-        text: '找出失去了球棍的心理治疗师',
-        type:'single',
-        correctOriginalIndex: 3,
-        onWrongMsg: '再选错就过来心理治疗',
-        onCorrectMsg: '隔壁他男人在双持ing',
-        achievement: 'therapist'
-      },
-      {
-        id:4,
-        text: '找出图中的直男',
-        type:'single-multi-text',
-        onSelect: function(originalIndex){
-          if(originalIndex===0||originalIndex===1) {
-            unlockAchievement('straight');
-            return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
-          } else {
-            unlockAchievement('gayPride');
-            return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
+      const QUESTIONS = [
+        {
+          id:1,
+          text: '找出里面所有男同',
+          type:'special-single',
+          onSelect: function(idx){
+            return {ok:false, msg:'哈哈骗你的，我只设置了单选'};
+          }
+        },
+        {
+          id:2,
+          text: '找出真正的厨师',
+          type:'single',
+          correctOriginalIndex: 0,
+          onCorrectMsg: '你看起来很好吃',
+          onWrongMsg: 'Cazzo，你不认识我吗',
+          achievement: 'chef'
+        },
+        {
+          id:3,
+          text: '找出失去了球棍的心理治疗师',
+          type:'single',
+          correctOriginalIndex: 3,
+          onWrongMsg: '再选错就过来心理治疗',
+          onCorrectMsg: '隔壁他男人在双持ing',
+          achievement: 'therapist'
+        },
+        {
+          id:4,
+          text: '找出图中的直男',
+          type:'single-multi-text',
+          onSelect: function(originalIndex){
+            if(originalIndex===0||originalIndex===1) {
+              unlockAchievement('straight');
+              return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
+            } else {
+              unlockAchievement('gayPride');
+              return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
+            }
           }
         }
+      ];
+
+      let gridEl = document.getElementById('grid');
+      let timerEl = document.getElementById('timer');
+      let scoreEl = document.getElementById('score');
+      let messageEl = document.getElementById('message');
+      let questionTextEl = document.getElementById('questionText');
+      let roundEl = document.getElementById('round');
+      let ctaLink = document.getElementById('ctaLink');
+      let ctaImg = document.getElementById('ctaImg');
+      let scoreNoticeEl = document.getElementById('scoreNotice');
+      let btnPlayAgain = document.getElementById('btnPlayAgain');
+      let btnEndGame = document.getElementById('btnEndGame');
+      let achievementEntrance = document.getElementById('achievementEntrance');
+      let achievementsPanel = document.getElementById('achievementsPanel');
+      let achievementCountEl = document.getElementById('achievementCount');
+      let btnShareWechat = document.getElementById('btnShareWechat');
+      let btnShareQQ = document.getElementById('btnShareQQ');
+      let btnShareScreenshot = document.getElementById('btnShareScreenshot');
+      let btnResetAchievements = document.getElementById('btnResetAchievements');
+      let resetAchievementsModal = document.getElementById('resetAchievementsModal');
+      let btnConfirmReset = document.getElementById('btnConfirmReset');
+      let btnSpecialReset = document.getElementById('btnSpecialReset');
+      let gameStats = document.getElementById('gameStats');
+      let finalScoreEl = document.getElementById('finalScore');
+      let correctCountEl = document.getElementById('correctCount');
+      let wrongCountEl = document.getElementById('wrongCount');
+      let totalRoundsEl = document.getElementById('totalRounds');
+      let unlockedAchievementsEl = document.getElementById('unlockedAchievements');
+      let accuracyRateEl = document.getElementById('accuracyRate');
+      // 广告相关元素
+      let adCloseBtn = document.getElementById('adCloseBtn');
+      let adCloseModal = document.getElementById('adCloseModal');
+      let btnAdOption1 = document.getElementById('btnAdOption1');
+      let btnAdOption2 = document.getElementById('btnAdOption2');
+      let btnAdOption3 = document.getElementById('btnAdOption3');
+
+      let timeLeft = CONFIG.timeLimit;
+      let timer = null;
+      let score = 0;
+      let round = 0;
+      let currentQuestion = null;
+      let playable = false;
+      let shuffledOriginalIndexes = [];
+      let triggeredScoreNotices = new Set();
+      // 使用localStorage保存成就，重置游戏不会消失
+      let unlockedAchievements = new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []);
+      let consecutiveImg1Count = 0;
+      let consecutiveNotImg3Count = 0;
+      let correctCount = 0;
+      let wrongCount = 0;
+      let gameActive = false;
+      const totalAchievements = 7; // 不包括隐藏成就
+
+      ctaImg.src = CONFIG.adMedia;
+      ctaLink.href = CONFIG.adLink;
+
+      // 移动端触摸+点击事件绑定函数
+      function bindTap(elemId, callback) {
+        const elem = document.getElementById(elemId);
+        if (!elem) return;
+
+        elem.addEventListener('touchend', (e) => {
+          e.preventDefault(); // 阻止默认行为（如页面滚动）
+          callback();
+        });
+
+        elem.addEventListener('click', callback); // 兼容桌面端
       }
-    ];
 
-    let gridEl = document.getElementById('grid');
-    let timerEl = document.getElementById('timer');
-    let scoreEl = document.getElementById('score');
-    let messageEl = document.getElementById('message');
-    let questionTextEl = document.getElementById('questionText');
-    let roundEl = document.getElementById('round');
-    let ctaLink = document.getElementById('ctaLink');
-    let ctaImg = document.getElementById('ctaImg');
-    let scoreNoticeEl = document.getElementById('scoreNotice');
-    let btnPlayAgain = document.getElementById('btnPlayAgain');
-    let btnEndGame = document.getElementById('btnEndGame');
-    let achievementEntrance = document.getElementById('achievementEntrance');
-    let achievementsPanel = document.getElementById('achievementsPanel');
-    let achievementCountEl = document.getElementById('achievementCount');
-    let btnShareWechat = document.getElementById('btnShareWechat');
-    let btnShareQQ = document.getElementById('btnShareQQ');
-    let btnShareScreenshot = document.getElementById('btnShareScreenshot');
-    let btnResetAchievements = document.getElementById('btnResetAchievements');
-    let resetAchievementsModal = document.getElementById('resetAchievementsModal');
-    let btnConfirmReset = document.getElementById('btnConfirmReset');
-    let btnSpecialReset = document.getElementById('btnSpecialReset');
-    let gameStats = document.getElementById('gameStats');
-    let finalScoreEl = document.getElementById('finalScore');
-    let correctCountEl = document.getElementById('correctCount');
-    let wrongCountEl = document.getElementById('wrongCount');
-    let totalRoundsEl = document.getElementById('totalRounds');
-    let unlockedAchievementsEl = document.getElementById('unlockedAchievements');
-    let accuracyRateEl = document.getElementById('accuracyRate');
-    // 广告相关元素
-    let adCloseBtn = document.getElementById('adCloseBtn');
-    let adCloseModal = document.getElementById('adCloseModal');
-    let btnAdOption1 = document.getElementById('btnAdOption1');
-    let btnAdOption2 = document.getElementById('btnAdOption2');
-    let btnAdOption3 = document.getElementById('btnAdOption3');
+      // 更新成就计数
+      function updateAchievementCount() {
+        const count = unlockedAchievements.size;
+        achievementCountEl.textContent = `${count}/${totalAchievements} 成就已解锁`;
+      }
 
-    let timeLeft = CONFIG.timeLimit;
-    let timer = null;
-    let score = 0;
-    let round = 0;
-    let currentQuestion = null;
-    let playable = false;
-    let shuffledOriginalIndexes = [];
-    let triggeredScoreNotices = new Set();
-    // 使用localStorage保存成就，重置游戏不会消失
-    let unlockedAchievements = new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []);
-    let consecutiveImg1Count = 0;
-    let consecutiveNotImg3Count = 0;
-    let correctCount = 0;
-    let wrongCount = 0;
-    let gameActive = false;
-    const totalAchievements = 7; // 不包括隐藏成就
+      // 初始化成就显示
+      function initAchievements() {
+        document.querySelectorAll('.achievement-item').forEach(item => {
+          const id = item.getAttribute('data-id');
+          if (unlockedAchievements.has(id)) {
+            item.classList.remove('locked');
+            item.classList.add('unlocked');
+            item.querySelector('.achievement-icon').classList.remove('locked');
+            item.querySelector('.achievement-icon').classList.add('unlocked');
+          }
+        });
+        updateAchievementCount();
+      }
 
-    ctaImg.src = CONFIG.adMedia;
-    ctaLink.href = CONFIG.adLink;
-
-    // 更新成就计数
-    function updateAchievementCount() {
-      const count = unlockedAchievements.size;
-      achievementCountEl.textContent = `${count}/${totalAchievements} 成就已解锁`;
-    }
-
-    // 初始化成就显示
-    function initAchievements() {
-      document.querySelectorAll('.achievement-item').forEach(item => {
-        const id = item.getAttribute('data-id');
-        if (unlockedAchievements.has(id)) {
-          item.classList.remove('locked');
-          item.classList.add('unlocked');
-          item.querySelector('.achievement-icon').classList.remove('locked');
-          item.querySelector('.achievement-icon').classList.add('unlocked');
-        }
-      });
-      updateAchievementCount();
-    }
-
-    // 解锁成就函数
-    function unlockAchievement(achievementId) {
-      if (unlockedAchievements.has(achievementId)) return;
-      
-      unlockedAchievements.add(achievementId);
-      // 保存到localStorage
-      localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(unlockedAchievements)));
-      
-      const achievementItem = document.querySelector(`.achievement-item[data-id="${achievementId}"]`);
-      if (achievementItem) {
-        achievementItem.classList.remove('locked');
-        achievementItem.classList.add('unlocked');
-        achievementItem.querySelector('.achievement-icon').classList.remove('locked');
-        achievementItem.querySelector('.achievement-icon').classList.add('unlocked');
+      // 解锁成就函数
+      function unlockAchievement(achievementId) {
+        if (unlockedAchievements.has(achievementId)) return;
         
-        // 显示成就解锁提示
-        showScoreNotice(`🏆 解锁成就：${achievementItem.querySelector('.achievement-name').textContent}`);
-      } else if (achievementId === 'omg') {
-        // 隐藏成就，只显示提示
-        showScoreNotice(`🏆 解锁隐藏成就：OMG♂`);
-      }
-      
-      updateAchievementCount();
-    }
-
-    // 重置成就
-    function resetAchievements(keepHidden = false) {
-      if (!keepHidden) {
-        unlockedAchievements.clear();
-      } else {
-        // 保留隐藏成就OMG♂
-        const temp = new Set();
-        if (unlockedAchievements.has('omg')) {
-          temp.add('omg');
+        unlockedAchievements.add(achievementId);
+        // 保存到localStorage
+        localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(unlockedAchievements)));
+        
+        const achievementItem = document.querySelector(`.achievement-item[data-id="${achievementId}"]`);
+        if (achievementItem) {
+          achievementItem.classList.remove('locked');
+          achievementItem.classList.add('unlocked');
+          achievementItem.querySelector('.achievement-icon').classList.remove('locked');
+          achievementItem.querySelector('.achievement-icon').classList.add('unlocked');
+          
+          // 显示成就解锁提示
+          showScoreNotice(`🏆 解锁成就：${achievementItem.querySelector('.achievement-name').textContent}`);
+        } else if (achievementId === 'omg') {
+          // 隐藏成就，只显示提示
+          showScoreNotice(`🏆 解锁隐藏成就：OMG♂`);
         }
-        unlockedAchievements = temp;
+        
+        updateAchievementCount();
       }
-      localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(unlockedAchievements)));
-      document.querySelectorAll('.achievement-item').forEach(item => {
-        item.classList.remove('unlocked');
-        item.classList.add('locked');
-        item.querySelector('.achievement-icon').classList.remove('unlocked');
-        item.querySelector('.achievement-icon').classList.add('locked');
-      });
-      updateAchievementCount();
-      showScoreNotice('成就已重置！');
-    }
 
-    // 分享功能
-    function shareToWechat() {
-      const shareText = `我在"你好啊我是男同"游戏中获得了${score}分，解锁了${unlockedAchievements.size}个成就！快来挑战我吧！`;
-      alert(`微信分享：${shareText}\n\n（实际项目中需要集成微信JS-SDK）`);
-    }
-
-    function shareToQQ() {
-      const shareText = `我在"你好啊我是男同"游戏中获得了${score}分，解锁了${unlockedAchievements.size}个成就！快来挑战我吧！`;
-      window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(window.location.href)}&title=你好啊我是男同&desc=${encodeURIComponent(shareText)}&summary=&site=`, '_blank', 'width=600,height=400');
-    }
-
-    function takeScreenshot() {
-      alert('截图功能已触发！\n\n（实际项目中需要引入html2canvas库）');
-    }
-
-    function shuffleArrayWithIndex(array) {
-      const newArr = [...array];
-      const originalIndexes = Array.from(array.keys());
-      for (let i = newArr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
-        [originalIndexes[i], originalIndexes[j]] = [originalIndexes[j], originalIndexes[i]];
+      // 重置成就
+      function resetAchievements(keepHidden = false) {
+        if (!keepHidden) {
+          unlockedAchievements.clear();
+        } else {
+          // 保留隐藏成就OMG♂
+          const temp = new Set();
+          if (unlockedAchievements.has('omg')) {
+            temp.add('omg');
+          }
+          unlockedAchievements = temp;
+        }
+        localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(unlockedAchievements)));
+        document.querySelectorAll('.achievement-item').forEach(item => {
+          item.classList.remove('unlocked');
+          item.classList.add('locked');
+          item.querySelector('.achievement-icon').classList.remove('unlocked');
+          item.querySelector('.achievement-icon').classList.add('locked');
+        });
+        updateAchievementCount();
+        showScoreNotice('成就已重置！');
       }
-      return { shuffledArr: newArr, originalIndexes: originalIndexes };
-    }
 
-    function showScoreNotice(text) {
-      scoreNoticeEl.textContent = text;
-      scoreNoticeEl.classList.add('show');
-      setTimeout(() => {
-        scoreNoticeEl.classList.remove('show');
-      }, 3000);
-    }
-
-    function checkScoreMilestone() {
-      if (score >= 50 && !triggeredScoreNotices.has(50)) {
-        showScoreNotice('太棒了！50分！');
-        triggeredScoreNotices.add(50);
+      // 分享功能
+      function shareToWechat() {
+        const shareText = `我在"你好啊我是男同"游戏中获得了${score}分，解锁了${unlockedAchievements.size}个成就！快来挑战我吧！`;
+        alert(`微信分享：${shareText}\n\n（实际项目中需要集成微信JS-SDK）`);
       }
-      if (score >= CONFIG.maxScore && !triggeredScoreNotices.has(CONFIG.maxScore)) {
-        showScoreNotice('100分！天呐你就是男同之神！');
-        triggeredScoreNotices.add(CONFIG.maxScore);
-        unlockAchievement('maxScore');
-        btnPlayAgain.classList.add('show');
-        btnEndGame.classList.add('show');
-      }
-    }
 
-    function renderGrid(){
-      gridEl.innerHTML = '';
-      const imgs = CONFIG.images.slice(0,4);
-      const { shuffledArr, originalIndexes } = shuffleArrayWithIndex(imgs);
-      shuffledOriginalIndexes = originalIndexes;
-      for(let i=0;i<4;i++){
-        const cell = document.createElement('button');
-        cell.className = 'cell';
-        cell.setAttribute('data-visual-index', i);
-        const img = document.createElement('img');
-        img.alt = `角色 ${i+1}`;
-        img.src = shuffledArr[i] || '';
-        cell.appendChild(img);
-        cell.addEventListener('click', onCellClick);
-        gridEl.appendChild(cell);
+      function shareToQQ() {
+        const shareText = `我在"你好啊我是男同"游戏中获得了${score}分，解锁了${unlockedAchievements.size}个成就！快来挑战我吧！`;
+        window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(window.location.href)}&title=你好啊我是男同&desc=${encodeURIComponent(shareText)}&summary=&site=`, '_blank', 'width=600,height=400');
       }
-    }
 
-    function startRound(){
-      if(timer) clearInterval(timer);
-      timeLeft = CONFIG.timeLimit;
-      timerEl.textContent = timeLeft + 's';
-      round++;
-      roundEl.textContent = round;
-      currentQuestion = QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)];
-      questionTextEl.textContent = currentQuestion.text;
-      renderGrid();
-      playable = true;
-      setMessage('','');
-      timer = setInterval(()=>{
-        timeLeft--;
+      function takeScreenshot() {
+        alert('截图功能已触发！\n\n（实际项目中需要引入html2canvas库）');
+      }
+
+      function shuffleArrayWithIndex(array) {
+        const newArr = [...array];
+        const originalIndexes = Array.from(array.keys());
+        for (let i = newArr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+          [originalIndexes[i], originalIndexes[j]] = [originalIndexes[j], originalIndexes[i]];
+        }
+        return { shuffledArr: newArr, originalIndexes: originalIndexes };
+      }
+
+      function showScoreNotice(text) {
+        scoreNoticeEl.textContent = text;
+        scoreNoticeEl.classList.add('show');
+        setTimeout(() => {
+          scoreNoticeEl.classList.remove('show');
+        }, 3000);
+      }
+
+      function checkScoreMilestone() {
+        if (score >= 50 && !triggeredScoreNotices.has(50)) {
+          showScoreNotice('太棒了！50分！');
+          triggeredScoreNotices.add(50);
+        }
+        if (score >= CONFIG.maxScore && !triggeredScoreNotices.has(CONFIG.maxScore)) {
+          showScoreNotice('100分！天呐你就是男同之神！');
+          triggeredScoreNotices.add(CONFIG.maxScore);
+          unlockAchievement('maxScore');
+          btnPlayAgain.classList.add('show');
+          btnEndGame.classList.add('show');
+        }
+      }
+
+      function renderGrid(){
+        gridEl.innerHTML = '';
+        const imgs = CONFIG.images.slice(0,4);
+        const { shuffledArr, originalIndexes } = shuffleArrayWithIndex(imgs);
+        shuffledOriginalIndexes = originalIndexes;
+        for(let i=0;i<4;i++){
+          const cell = document.createElement('button');
+          cell.className = 'cell';
+          cell.setAttribute('data-visual-index', i);
+          const img = document.createElement('img');
+          img.alt = `角色 ${i+1}`;
+          img.src = shuffledArr[i] || '';
+          cell.appendChild(img);
+          // 单元格点击绑定触摸+点击
+          bindTap(cell, () => onCellClick(cell));
+          gridEl.appendChild(cell);
+        }
+      }
+
+      function startRound(){
+        if(timer) clearInterval(timer);
+        timeLeft = CONFIG.timeLimit;
         timerEl.textContent = timeLeft + 's';
-        if(timeLeft<=0){
-          clearInterval(timer);
-          playable = false;
-          handleTimeout();
-        }
-      },1000);
-    }
+        round++;
+        roundEl.textContent = round;
+        currentQuestion = QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)];
+        questionTextEl.textContent = currentQuestion.text;
+        renderGrid();
+        playable = true;
+        setMessage('','');
+        timer = setInterval(()=>{
+          timeLeft--;
+          timerEl.textContent = timeLeft + 's';
+          if(timeLeft<=0){
+            clearInterval(timer);
+            playable = false;
+            handleTimeout();
+          }
+        },1000);
+      }
 
-    function handleTimeout(){
-      if(!currentQuestion) return;
-      setMessage('杂鱼 慢死了','lose');
-      wrongCount++;
-      setTimeout(()=>{
-        if (gameActive) {
-          startRound();
-        }
-      },1300);
-    }
+      function handleTimeout(){
+        if(!currentQuestion) return;
+        setMessage('杂鱼 慢死了','lose');
+        wrongCount++;
+        setTimeout(()=>{
+          if (gameActive) {
+            startRound();
+          }
+        },1300);
+      }
 
-    function onCellClick(e){
-      if(!playable) return;
-      playable = false;
-      clearInterval(timer);
-      const visualIndex = Number(e.currentTarget.getAttribute('data-visual-index'));
-      const originalIndex = shuffledOriginalIndexes[visualIndex];
+      function onCellClick(cell){
+        if(!playable) return;
+        playable = false;
+        clearInterval(timer);
+        const visualIndex = Number(cell.getAttribute('data-visual-index'));
+        const originalIndex = shuffledOriginalIndexes[visualIndex];
 
-      // 检查连续选择统计
-      if (originalIndex === 0) { // img1.jpg
-        consecutiveImg1Count++;
-        consecutiveNotImg3Count = 0;
-        if (consecutiveImg1Count >= 4) {
-          unlockAchievement('forceful');
+        // 检查连续选择统计
+        if (originalIndex === 0) { // img1.jpg
+          consecutiveImg1Count++;
+          consecutiveNotImg3Count = 0;
+          if (consecutiveImg1Count >= 4) {
+            unlockAchievement('forceful');
+            consecutiveImg1Count = 0;
+          }
+        } else if (originalIndex !== 2) { // 不是img3.jpg
+          consecutiveNotImg3Count++;
           consecutiveImg1Count = 0;
-        }
-      } else if (originalIndex !== 2) { // 不是img3.jpg
-        consecutiveNotImg3Count++;
-        consecutiveImg1Count = 0;
-        if (consecutiveNotImg3Count >= 4) {
-          unlockAchievement('forgotSomeone');
+          if (consecutiveNotImg3Count >= 4) {
+            unlockAchievement('forgotSomeone');
+            consecutiveNotImg3Count = 0;
+          }
+        } else { // 选择了img3.jpg
+          consecutiveImg1Count = 0;
           consecutiveNotImg3Count = 0;
         }
-      } else { // 选择了img3.jpg
-        consecutiveImg1Count = 0;
-        consecutiveNotImg3Count = 0;
-      }
 
-      if(currentQuestion.type==='special-single'){
-        setMessage('哈哈骗你的，我只设置了单选','lose');
+        if(currentQuestion.type==='special-single'){
+          setMessage('哈哈骗你的，我只设置了单选','lose');
+          wrongCount++;
+          setTimeout(()=>{
+            if (gameActive) {
+              startRound();
+            }
+          },1200);
+          return;
+        }
+
+        if(currentQuestion.type==='single'){
+          if(originalIndex===currentQuestion.correctOriginalIndex){
+            if (score < CONFIG.maxScore) {
+              score += CONFIG.pointsPerCorrect;
+              if (score > CONFIG.maxScore) score = CONFIG.maxScore;
+              scoreEl.textContent = score;
+              checkScoreMilestone();
+              setMessage(currentQuestion.onCorrectMsg,'win');
+              correctCount++;
+              
+              if (currentQuestion.achievement) {
+                unlockAchievement(currentQuestion.achievement);
+              }
+            } else {
+              setMessage('已经...极限了♂♂♂','limit');
+            }
+          } else {
+            setMessage(currentQuestion.onWrongMsg,'lose');
+            wrongCount++;
+          }
+          setTimeout(()=>{
+            if (gameActive) {
+              startRound();
+            }
+          },1300);
+          return;
+        }
+
+        if(currentQuestion.type==='single-multi-text'){
+          const res = currentQuestion.onSelect(originalIndex);
+          if(res){
+            if(res.ok){
+              if (score < CONFIG.maxScore) {
+                score += CONFIG.pointsPerCorrect;
+                if (score > CONFIG.maxScore) score = CONFIG.maxScore;
+                scoreEl.textContent = score;
+                checkScoreMilestone();
+                setMessage(res.msg,'win');
+                correctCount++;
+              } else {
+                setMessage('已经...极限了♂♂♂','limit');
+              }
+            }
+            else {
+              setMessage(res.msg,'lose');
+              wrongCount++;
+            }
+          }
+          setTimeout(()=>{
+            if (gameActive) {
+              startRound();
+            }
+          },1300);
+          return;
+        }
+
+        setMessage('发生错误，重试','lose');
         wrongCount++;
         setTimeout(()=>{
           if (gameActive) {
             startRound();
           }
         },1200);
-        return;
       }
 
-      if(currentQuestion.type==='single'){
-        if(originalIndex===currentQuestion.correctOriginalIndex){
-          if (score < CONFIG.maxScore) {
-            score += CONFIG.pointsPerCorrect;
-            if (score > CONFIG.maxScore) score = CONFIG.maxScore;
-            scoreEl.textContent = score;
-            checkScoreMilestone();
-            setMessage(currentQuestion.onCorrectMsg,'win');
-            correctCount++;
-            
-            if (currentQuestion.achievement) {
-              unlockAchievement(currentQuestion.achievement);
-            }
-          } else {
-            setMessage('已经...极限了♂♂♂','limit');
-          }
-        } else {
-          setMessage(currentQuestion.onWrongMsg,'lose');
-          wrongCount++;
-        }
-        setTimeout(()=>{
-          if (gameActive) {
-            startRound();
-          }
-        },1300);
-        return;
+      function setMessage(text, type){
+        messageEl.className = 'message';
+        if(type==='win') messageEl.classList.add('win','show');
+        else if(type==='lose') messageEl.classList.add('lose','show');
+        else if(type==='limit') messageEl.classList.add('limit','show');
+        if(text) messageEl.textContent = text; else messageEl.textContent = '';
       }
 
-      if(currentQuestion.type==='single-multi-text'){
-        const res = currentQuestion.onSelect(originalIndex);
-        if(res){
-          if(res.ok){
-            if (score < CONFIG.maxScore) {
-              score += CONFIG.pointsPerCorrect;
-              if (score > CONFIG.maxScore) score = CONFIG.maxScore;
-              scoreEl.textContent = score;
-              checkScoreMilestone();
-              setMessage(res.msg,'win');
-              correctCount++;
-            } else {
-              setMessage('已经...极限了♂♂♂','limit');
-            }
-          }
-          else {
-            setMessage(res.msg,'lose');
-            wrongCount++;
-          }
-        }
-        setTimeout(()=>{
-          if (gameActive) {
-            startRound();
-          }
-        },1300);
-        return;
+      function resetGame() {
+        if(timer) clearInterval(timer);
+        round = 0;
+        score = 0;
+        scoreEl.textContent = score;
+        timeLeft = CONFIG.timeLimit;
+        timerEl.textContent = '--';
+        gridEl.innerHTML = '';
+        setMessage('点击"开始♂游戏"开始挑战','');
+        triggeredScoreNotices.clear();
+        consecutiveImg1Count = 0;
+        consecutiveNotImg3Count = 0;
+        correctCount = 0;
+        wrongCount = 0;
+        btnPlayAgain.classList.remove('show');
+        btnEndGame.classList.remove('show');
+        gameStats.classList.remove('show');
+        gameActive = false;
+        document.body.classList.remove('game-active');
       }
 
-      setMessage('发生错误，重试','lose');
-      wrongCount++;
-      setTimeout(()=>{
-        if (gameActive) {
-          startRound();
-        }
-      },1200);
-    }
-
-    function setMessage(text, type){
-      messageEl.className = 'message';
-      if(type==='win') messageEl.classList.add('win','show');
-      else if(type==='lose') messageEl.classList.add('lose','show');
-      else if(type==='limit') messageEl.classList.add('limit','show');
-      if(text) messageEl.textContent = text; else messageEl.textContent = '';
-    }
-
-    function resetGame() {
-      if(timer) clearInterval(timer);
-      round = 0;
-      score = 0;
-      scoreEl.textContent = score;
-      timeLeft = CONFIG.timeLimit;
-      timerEl.textContent = '--';
-      gridEl.innerHTML = '';
-      setMessage('点击"开始♂游戏"开始挑战','');
-      triggeredScoreNotices.clear();
-      consecutiveImg1Count = 0;
-      consecutiveNotImg3Count = 0;
-      correctCount = 0;
-      wrongCount = 0;
-      btnPlayAgain.classList.remove('show');
-      btnEndGame.classList.remove('show');
-      gameStats.classList.remove('show');
-      gameActive = false;
-      document.body.classList.remove('game-active');
-    }
-
-    function endGame() {
-      gameActive = false;
-      if(timer) clearInterval(timer);
-      playable = false;
-      
-      // 计算统计数据
-      const totalAnswers = correctCount + wrongCount;
-      const accuracy = totalAnswers > 0 ? Math.round((correctCount / totalAnswers) * 100) : 0;
-      
-      // 更新统计显示
-      finalScoreEl.textContent = score;
-      correctCountEl.textContent = correctCount;
-      wrongCountEl.textContent = wrongCount;
-      totalRoundsEl.textContent = round;
-      unlockedAchievementsEl.textContent = unlockedAchievements.size;
-      accuracyRateEl.textContent = `${accuracy}%`;
-      
-      // 显示统计面板，隐藏游戏按钮
-      gameStats.classList.add('show');
-      btnPlayAgain.classList.remove('show');
-      btnEndGame.classList.remove('show');
-      
-      // 退出游戏专注模式
-      document.body.classList.remove('game-active');
-      
-      showScoreNotice(`游戏结束！最终得分：${score}分`);
-    }
-
-    // 广告关闭相关函数
-    function openAd() {
-      // 跳转到广告链接
-      window.open(CONFIG.adLink, '_blank');
-      adCloseModal.classList.remove('show');
-    }
-
-    function closeAdWithInsult() {
-      showScoreNotice('放你的屁。');
-      adCloseModal.classList.remove('show');
-      // 隐藏广告
-      document.querySelector('footer.ad').style.display = 'none';
-    }
-
- 
+      function end
