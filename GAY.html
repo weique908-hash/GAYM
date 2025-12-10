@@ -44,7 +44,7 @@
     .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:18px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
     .score-notice.show{display:block}
     @keyframes popup{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
-    footer.ad{margin-top:12px;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;transition:all 0.3s ease;position:relative}
+    footer.ad{margin-top:12px;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;transition:all 0.3s ease}
     .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none}
     .flash{animation:flash 1s linear infinite}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:0.25}}
@@ -100,8 +100,6 @@
     .game-active .card{padding:14px}
     .game-active .game-area{margin-top:0}
     @media (max-width:700px){.game-area{flex-direction:column}.sidebar{width:100%;flex-direction:row}.achievement-list{grid-template-columns:repeat(3,1fr)}.stats-grid{grid-template-columns:repeat(2,1fr)}}
-    /* 广告关闭按钮 */
-    .ad-close-btn{position:absolute;top:6px;right:6px;background:var(--lose);color:white;border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;z-index:10;pointer-events:auto}
   </style>
   <!-- 引入Font Awesome用于图标 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -251,7 +249,6 @@
     </div>
 
     <footer class="ad">
-      <button id="adCloseBtn" class="ad-close-btn">×</button>
       <div style="font-size:13px;color:var(--muted)">广告区（点击可跳转到你的推广页面）</div>
       <a id="ctaLink" class="cta" href="#" role="link">
         <img id="ctaImg" src="flash.gif" alt="点击♂这里（我还没调好）" style="width:36px;height:36px;object-fit:contain;border-radius:6px"> 
@@ -269,18 +266,6 @@
       <div class="modal-buttons">
         <button id="btnConfirmReset" class="modal-btn confirm">是</button>
         <button id="btnSpecialReset" class="modal-btn special">yeah♂</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 广告关闭确认模态框 -->
-  <div id="adCloseModal" class="modal">
-    <div class="modal-content">
-      <h3 class="modal-title">不进来看看吗？</h3>
-      <div style="font-size:14px;color:var(--muted);margin:0 0 16px">真的不进来了解一下吗？</div>
-      <div class="modal-buttons">
-        <button id="btnAdOption1" class="modal-btn confirm">好吧，来了❤️</button>
-        <button id="btnAdOption2" class="modal-btn cancel">呃↓，我是直男。</button>
       </div>
     </div>
   </div>
@@ -371,11 +356,6 @@
     let totalRoundsEl = document.getElementById('totalRounds');
     let unlockedAchievementsEl = document.getElementById('unlockedAchievements');
     let accuracyRateEl = document.getElementById('accuracyRate');
-    // 广告相关元素
-    let adCloseBtn = document.getElementById('adCloseBtn');
-    let adCloseModal = document.getElementById('adCloseModal');
-    let btnAdOption1 = document.getElementById('btnAdOption1');
-    let btnAdOption2 = document.getElementById('btnAdOption2');
 
     let timeLeft = CONFIG.timeLimit;
     let timer = null;
@@ -724,19 +704,48 @@
       showScoreNotice(`游戏结束！最终得分：${score}分`);
     }
 
-    // 广告相关逻辑
-    function openAd() {
-      const newTab = window.open(CONFIG.adLink, '_blank');
-      if (!newTab) {
-        showScoreNotice('请允许弹出窗口查看广告');
-      }
-      adCloseModal.classList.remove('show');
-    }
+    document.getElementById('btnStart').addEventListener('click', ()=>{ 
+      resetGame();
+      gameActive = true;
+      document.body.classList.add('game-active');
+      startRound(); 
+    });
+    document.getElementById('btnRestart').addEventListener('click', resetGame);
+    document.getElementById('btnPlayAgain').addEventListener('click', ()=>{ 
+      resetGame();
+      gameActive = true;
+      document.body.classList.add('game-active');
+      startRound(); 
+    });
+    document.getElementById('btnEndGame').addEventListener('click', endGame);
 
-    function closeAdWithInsult() {
-      showScoreNotice('放你的屁。');
-      adCloseModal.classList.remove('show');
-      document.querySelector('footer.ad').style.display = 'none';
-    }
+    btnShareWechat.addEventListener('click', shareToWechat);
+    btnShareQQ.addEventListener('click', shareToQQ);
+    btnShareScreenshot.addEventListener('click', takeScreenshot);
 
-    document.getElementBy
+    // 成就墙入口点击事件
+    achievementEntrance.addEventListener('click', () => {
+      achievementsPanel.classList.toggle('show');
+    });
+
+    // 重置成就按钮事件
+    btnResetAchievements.addEventListener('click', () => {
+      resetAchievementsModal.classList.add('show');
+    });
+
+    // 模态框按钮事件
+    btnConfirmReset.addEventListener('click', () => {
+      resetAchievements(false);
+      resetAchievementsModal.classList.remove('show');
+    });
+
+    btnSpecialReset.addEventListener('click', () => {
+      unlockAchievement('omg');
+      resetAchievements(true); // 保留OMG♂成就
+      resetAchievementsModal.classList.remove('show');
+    });
+
+    // 点击模态框外部关闭
+    resetAchievementsModal.addEventListener('click', (e) => {
+      if (e.target === resetAchievementsModal) {
+   
