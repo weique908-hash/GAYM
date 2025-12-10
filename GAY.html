@@ -26,7 +26,6 @@
     .message.show{display:block}
     .message.win{color:var(--win)}
     .message.lose{color:var(--lose)}
-    /* 新增分数提示样式 */
     .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:18px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
     .score-notice.show{display:block}
     @keyframes popup{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -74,7 +73,6 @@
       </a>
     </footer>
   </div>
-  <!-- 新增分数提示弹窗 -->
   <div id="scoreNotice" class="score-notice"></div>
 
   <script>
@@ -88,6 +86,7 @@
       adMedia: "ad-banner.gif",
       adLink: "https://你的推广链接.com",
       timeLimit: 12,
+      maxScore: 100, // 新增：满分设置
     };
 
     const QUESTIONS = [
@@ -113,7 +112,7 @@
         type:'single',
         correctOriginalIndex: 1,
         onCorrectMsg: '🎶黑心小蛋糕一枚口牙🍰',
-        onWrongMsg: '混蛋 认不出朝北的话亚当斯会来炸你家的'
+        onWrongMsg: '混蛋 亚当斯要来炸你家了'
       },
       {
         id:4,
@@ -142,7 +141,6 @@
     let roundEl = document.getElementById('round');
     let ctaLink = document.getElementById('ctaLink');
     let ctaImg = document.getElementById('ctaImg');
-    // 新增分数提示元素
     let scoreNoticeEl = document.getElementById('scoreNotice');
 
     let timeLeft = CONFIG.timeLimit;
@@ -152,7 +150,6 @@
     let currentQuestion = null;
     let playable = false;
     let shuffledOriginalIndexes = [];
-    // 记录已触发的分数提示，避免重复弹出
     let triggeredScoreNotices = new Set();
 
     ctaImg.src = CONFIG.adMedia;
@@ -169,24 +166,22 @@
       return { shuffledArr: newArr, originalIndexes: originalIndexes };
     }
 
-    // 新增：分数提示弹窗函数
     function showScoreNotice(text) {
       scoreNoticeEl.textContent = text;
       scoreNoticeEl.classList.add('show');
-      // 3秒后隐藏弹窗
       setTimeout(() => {
         scoreNoticeEl.classList.remove('show');
       }, 3000);
     }
 
-    // 新增：分数检查函数
     function checkScoreMilestone() {
-      if (score === 50 && !triggeredScoreNotices.has(50)) {
-        showScoreNotice('太棒了！50分！❤️');
+      if (score >= 50 && !triggeredScoreNotices.has(50)) {
+        showScoreNotice('太棒了！50分！');
         triggeredScoreNotices.add(50);
-      } else if (score === 100 && !triggeredScoreNotices.has(100)) {
-        showScoreNotice('100分！天呐你就是男同之神！🌈');
-        triggeredScoreNotices.add(100);
+      }
+      if (score >= CONFIG.maxScore && !triggeredScoreNotices.has(CONFIG.maxScore)) {
+        showScoreNotice('100分！天呐你就是男同之神！');
+        triggeredScoreNotices.add(CONFIG.maxScore);
       }
     }
 
@@ -236,7 +231,7 @@
         setMessage('哈哈骗你的，我只设置了单选','lose');
         return;
       }
-      setMessage('哈哈哈你好慢','lose');
+      setMessage('杂鱼 慢死了','lose');
       setTimeout(()=>{startRound();},1300);
     }
 
@@ -255,11 +250,16 @@
 
       if(currentQuestion.type==='single'){
         if(originalIndex===currentQuestion.correctOriginalIndex){
-          score += 10; 
-          scoreEl.textContent = score;
-          // 新增：更新分数后检查里程碑
-          checkScoreMilestone();
-          setMessage(currentQuestion.onCorrectMsg,'win');
+          // 修改：分数不超过满分
+          if (score < CONFIG.maxScore) {
+            score += 10;
+            scoreEl.textContent = score;
+            checkScoreMilestone();
+            setMessage(currentQuestion.onCorrectMsg,'win');
+          } else {
+            // 满分后显示极限提示
+            setMessage('已经...极限了♂♂♂','win');
+          }
         } else {
           setMessage(currentQuestion.onWrongMsg,'lose');
         }
@@ -270,12 +270,17 @@
       if(currentQuestion.type==='single-multi-text'){
         const res = currentQuestion.onSelect(originalIndex);
         if(res){
-          if(res.ok){ 
-            score += 6; 
-            scoreEl.textContent = score;
-            // 新增：更新分数后检查里程碑
-            checkScoreMilestone();
-            setMessage(res.msg,'win'); 
+          if(res.ok){
+            // 修改：分数不超过满分
+            if (score < CONFIG.maxScore) {
+              score += 6;
+              scoreEl.textContent = score;
+              checkScoreMilestone();
+              setMessage(res.msg,'win');
+            } else {
+              // 满分后显示极限提示
+              setMessage('已经...极限了♂♂♂','win');
+            }
           }
           else setMessage(res.msg,'lose');
         }
@@ -298,7 +303,6 @@
       round=0; 
       score=0; 
       scoreEl.textContent=score;
-      // 重置分数提示记录
       triggeredScoreNotices.clear();
       startRound(); 
     });
@@ -310,12 +314,11 @@
       timeLeft=CONFIG.timeLimit; 
       timerEl.textContent='--'; 
       gridEl.innerHTML=''; 
-      setMessage('点击“开始”开始游戏♂','');
-      // 重置分数提示记录
+      setMessage('点击“开始”开始游戏','');
       triggeredScoreNotices.clear();
     });
 
-    setMessage('点击“开始”开始游戏♂','');
+    setMessage('点击“开始”开始游戏','');
   </script>
 </body>
 </html>
