@@ -8,7 +8,7 @@
     :root{--bg:#0f1724;--card:#0b1220;--accent:#ffb86b;--muted:#94a3b8;--win:#34d399;--lose:#fb7185;font-family:Inter,system-ui,Arial}
     html,body{height:100%}
     body{margin:0;background:linear-gradient(180deg,var(--bg),#071025);color:#e6eef8;display:flex;align-items:center;justify-content:center;padding:16px}
-    .card{width:100%;max-width:760px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03);position:relative}
+    .card{width:100%;max-width:760px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
     header{display:flex;align-items:center;justify-content:space-between}
     h1{font-size:18px;margin:0}
     p.lead{margin:6px 0 0;font-size:13px;color:var(--muted)}
@@ -44,30 +44,20 @@
     .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:18px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
     .score-notice.show{display:block}
     @keyframes popup{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
-    footer.ad{margin-top:12px;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;transition:all 0.3s ease}
+    footer.ad{margin-top:12px;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
     .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none}
     .flash{animation:flash 1s linear infinite}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:0.25}}
-    /* 成就墙入口 */
-    .achievement-entrance{margin-top:12px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s ease}
-    .achievement-entrance:hover{background:rgba(255,255,255,0.01)}
-    .achievement-entrance h3{font-size:14px;margin:0;color:var(--accent);display:flex;align-items:center;gap:6px}
-    .achievement-count{font-size:12px;color:var(--muted)}
     /* 成就墙样式 */
-    .achievements{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);margin-top:8px;display:none}
-    .achievements.show{display:block}
+    .achievements{margin-top:12px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .achievements h3{font-size:14px;margin:0 0 8px;color:var(--accent)}
     .achievement-list{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
-    .achievement-item{background:rgba(255,255,255,0.01);padding:6px;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:4px;transition:all 0.2s ease}
-    .achievement-item:hover{background:rgba(255,255,255,0.02)}
+    .achievement-item{background:rgba(255,255,255,0.01);padding:6px;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:4px}
     .achievement-item.locked{color:var(--muted);opacity:0.6}
     .achievement-item.unlocked{color:var(--win)}
     .achievement-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center}
     .achievement-icon.locked::after{content:"🔒"}
     .achievement-icon.unlocked::after{content:"🏆"}
-    .achievement-info{flex:1}
-    .achievement-name{font-weight:500}
-    .achievement-desc{font-size:10px;color:var(--muted);margin-top:2px;display:none}
-    .achievement-item.unlocked .achievement-desc{display:block}
     /* 分享按钮样式 */
     .share-container{margin-top:8px;display:flex;gap:8px}
     .share-btn{flex:1;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all 0.2s}
@@ -86,22 +76,15 @@
     .modal-btn.cancel{background:var(--lose);color:white}
     .modal-btn.special{background:var(--accent);color:#071025}
     /* 游戏结束统计 */
-    .game-stats{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);margin-top:12px;display:none}
+    .game-stats{margin-top:12px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);display:none}
     .game-stats.show{display:block}
     .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
     .stat-item{background:rgba(255,255,255,0.01);padding:8px;border-radius:6px}
     .stat-label{font-size:12px;color:var(--muted);margin-bottom:4px}
     .stat-value{font-size:16px;font-weight:700}
-    /* 游戏专注模式 */
-    .game-active .achievement-entrance,
-    .game-active .achievements,
-    .game-active footer.ad,
-    .game-active .game-stats{display:none !important}
-    .game-active .card{padding:14px}
-    .game-active .game-area{margin-top:0}
     @media (max-width:700px){.game-area{flex-direction:column}.sidebar{width:100%;flex-direction:row}.achievement-list{grid-template-columns:repeat(3,1fr)}.stats-grid{grid-template-columns:repeat(2,1fr)}}
   </style>
-  <!-- 引入Font Awesome用于图标 -->
+  <!-- 引入Font Awesome用于分享图标 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -155,65 +138,39 @@
       </aside>
     </div>
 
-    <!-- 成就墙入口 -->
-    <div id="achievementEntrance" class="achievement-entrance">
-      <h3><i class="fas fa-trophy" style="color:var(--accent)"></i> 成就墙</h3>
-      <div id="achievementCount" class="achievement-count">0/6 成就已解锁</div>
-    </div>
-
     <!-- 成就墙 -->
-    <div id="achievementsPanel" class="achievements">
-      <div class="achievement-list">
+    <div class="achievements">
+      <h3>成就墙</h3>
+      <div id="achievementList" class="achievement-list">
         <div class="achievement-item locked" data-id="straight">
           <div class="achievement-icon locked"></div>
-          <div class="achievement-info">
-            <div class="achievement-name">我是直男</div>
-            <div class="achievement-desc">选择“直男”选项</div>
-          </div>
+          <div>我是直男</div>
         </div>
         <div class="achievement-item locked" data-id="gayPride">
           <div class="achievement-icon locked"></div>
-          <div class="achievement-info">
-            <div class="achievement-name">骄傲之GAY</div>
-            <div class="achievement-desc">选择“GAY”选项</div>
-          </div>
+          <div>骄傲之GAY</div>
         </div>
         <div class="achievement-item locked" data-id="chef">
           <div class="achievement-icon locked"></div>
-          <div class="achievement-info">
-            <div class="achievement-name">你是食材吗</div>
-            <div class="achievement-desc">正确找出厨师</div>
-          </div>
+          <div>你是食材吗</div>
         </div>
         <div class="achievement-item locked" data-id="therapist">
           <div class="achievement-icon locked"></div>
-          <div class="achievement-info">
-            <div class="achievement-name">心理治疗师</div>
-            <div class="achievement-desc">正确找出心理治疗师</div>
-          </div>
+          <div>心理治疗师</div>
         </div>
         <div class="achievement-item locked" data-id="maxScore">
           <div class="achievement-icon locked"></div>
-          <div class="achievement-info">
-            <div class="achievement-name">天选男同🌈</div>
-            <div class="achievement-desc">达到满分100分</div>
-          </div>
+          <div>天选男同🌈</div>
         </div>
         <div class="achievement-item locked" data-id="forgotSomeone">
           <div class="achievement-icon locked"></div>
-          <div class="achievement-info">
-            <div class="achievement-name">好像忘了谁...</div>
-            <div class="achievement-desc">连续四次不选择img3.jpg图片</div>
-          </div>
+          <div>好像忘了谁...</div>
         </div>
         <div class="achievement-item locked" data-id="forceful">
           <div class="achievement-icon locked"></div>
-          <div class="achievement-info">
-            <div class="achievement-name">强人所难♂</div>
-            <div class="achievement-desc">连续四次选择img1.jpg图片</div>
-          </div>
+          <div>强人所难♂</div>
         </div>
-        <!-- 隐藏成就不在成就墙显示 -->
+        <!-- 隐藏成就不显示在成就墙 -->
       </div>
     </div>
 
@@ -339,9 +296,7 @@
     let scoreNoticeEl = document.getElementById('scoreNotice');
     let btnPlayAgain = document.getElementById('btnPlayAgain');
     let btnEndGame = document.getElementById('btnEndGame');
-    let achievementEntrance = document.getElementById('achievementEntrance');
-    let achievementsPanel = document.getElementById('achievementsPanel');
-    let achievementCountEl = document.getElementById('achievementCount');
+    let achievementList = document.getElementById('achievementList');
     let btnShareWechat = document.getElementById('btnShareWechat');
     let btnShareQQ = document.getElementById('btnShareQQ');
     let btnShareScreenshot = document.getElementById('btnShareScreenshot');
@@ -372,16 +327,9 @@
     let correctCount = 0;
     let wrongCount = 0;
     let gameActive = false;
-    const totalAchievements = 7; // 不包括隐藏成就
 
     ctaImg.src = CONFIG.adMedia;
     ctaLink.href = CONFIG.adLink;
-
-    // 更新成就计数
-    function updateAchievementCount() {
-      const count = unlockedAchievements.size;
-      achievementCountEl.textContent = `${count}/${totalAchievements} 成就已解锁`;
-    }
 
     // 初始化成就显示
     function initAchievements() {
@@ -394,7 +342,6 @@
           item.querySelector('.achievement-icon').classList.add('unlocked');
         }
       });
-      updateAchievementCount();
     }
 
     // 解锁成就函数
@@ -413,13 +360,11 @@
         achievementItem.querySelector('.achievement-icon').classList.add('unlocked');
         
         // 显示成就解锁提示
-        showScoreNotice(`🏆 解锁成就：${achievementItem.querySelector('.achievement-name').textContent}`);
+        showScoreNotice(`🏆 解锁成就：${achievementItem.textContent.trim()}`);
       } else if (achievementId === 'omg') {
         // 隐藏成就，只显示提示
         showScoreNotice(`🏆 解锁隐藏成就：OMG♂`);
       }
-      
-      updateAchievementCount();
     }
 
     // 重置成就
@@ -441,7 +386,6 @@
         item.querySelector('.achievement-icon').classList.remove('unlocked');
         item.querySelector('.achievement-icon').classList.add('locked');
       });
-      updateAchievementCount();
       showScoreNotice('成就已重置！');
     }
 
@@ -673,7 +617,6 @@
       btnEndGame.classList.remove('show');
       gameStats.classList.remove('show');
       gameActive = false;
-      document.body.classList.remove('game-active');
     }
 
     function endGame() {
@@ -698,23 +641,18 @@
       btnPlayAgain.classList.remove('show');
       btnEndGame.classList.remove('show');
       
-      // 退出游戏专注模式
-      document.body.classList.remove('game-active');
-      
       showScoreNotice(`游戏结束！最终得分：${score}分`);
     }
 
     document.getElementById('btnStart').addEventListener('click', ()=>{ 
       resetGame();
       gameActive = true;
-      document.body.classList.add('game-active');
       startRound(); 
     });
     document.getElementById('btnRestart').addEventListener('click', resetGame);
     document.getElementById('btnPlayAgain').addEventListener('click', ()=>{ 
       resetGame();
       gameActive = true;
-      document.body.classList.add('game-active');
       startRound(); 
     });
     document.getElementById('btnEndGame').addEventListener('click', endGame);
@@ -722,11 +660,6 @@
     btnShareWechat.addEventListener('click', shareToWechat);
     btnShareQQ.addEventListener('click', shareToQQ);
     btnShareScreenshot.addEventListener('click', takeScreenshot);
-
-    // 成就墙入口点击事件
-    achievementEntrance.addEventListener('click', () => {
-      achievementsPanel.classList.toggle('show');
-    });
 
     // 重置成就按钮事件
     btnResetAchievements.addEventListener('click', () => {
@@ -748,4 +681,13 @@
     // 点击模态框外部关闭
     resetAchievementsModal.addEventListener('click', (e) => {
       if (e.target === resetAchievementsModal) {
-   
+        resetAchievementsModal.classList.remove('show');
+      }
+    });
+
+    // 初始化成就显示
+    initAchievements();
+    setMessage('点击"开始♂游戏"开始挑战','');
+  </script>
+</body>
+</html>
