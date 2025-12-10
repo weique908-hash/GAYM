@@ -398,7 +398,10 @@
       font-size: 12px;
       color: #ff6347;
     }
-    /* 新增：成就解锁弹窗样式 */
+    .hidden-cls {
+      display: none !important;
+    }
+    /* ========== 新增：成就弹窗样式 ========== */
     .achievement-modal {
       position: fixed;
       top: 50%;
@@ -407,21 +410,11 @@
       background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
       border-radius: 16px;
       padding: 24px;
-      max-width: 350px;
+      max-width: 320px;
       width: 90%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
       z-index: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
       text-align: center;
-      border: 2px solid #ffd700;
-      display: none;
-    }
-    .achievement-modal.show {
-      display: block;
-      animation: popup 0.3s ease-out forwards;
-    }
-    @keyframes popup {
-      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
     .achievement-modal-icon {
       font-size: 48px;
@@ -435,9 +428,16 @@
     .achievement-modal-desc {
       font-size: 14px;
       color: #aaaaaa;
+      margin-bottom: 16px;
     }
-    .hidden-cls {
-      display: none !important;
+    .achievement-modal-btn {
+      padding: 8px 24px;
+      background: #ffd700;
+      color: #121212;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -476,7 +476,7 @@
       <button class="game-btn btn-secondary" id="resetAchieveBtn">重置成就</button>
     </div>
 
-    <!-- 原有广告区域：加入正经衣服图片 -->
+    <!-- 原有广告区域：显示广告封面GIF -->
     <div class="ad-section" id="originalAd">
       <button class="ad-close-btn" id="originalAdClose">×</button>
       <h3 class="ad-title">快❤️进❤️来❤️</h3>
@@ -486,7 +486,7 @@
       <a href="javascript:;" class="ad-cta" id="originalAdCta">点击查看随机广告图</a>
     </div>
 
-    <!-- 新广告区域：帕字图片仅用于此广告 -->
+    <!-- 新广告区域：帕字图片+正经衣服 仅用于此广告 -->
     <div class="ad-section" id="newAd">
       <button class="ad-close-btn" id="newAdClose">×</button>
       <h3 class="ad-title">♂♂火热换装 在线漫画♂♂</h3>
@@ -531,17 +531,18 @@
     <div id="achievementList"></div>
   </div>
 
-  <!-- 新增：成就解锁弹窗 -->
-  <div class="achievement-modal" id="achievementModal">
+  <!-- ========== 新增：成就解锁弹窗 ========== -->
+  <div class="achievement-modal hidden-cls" id="achievementModal">
     <div class="achievement-modal-icon">🏆</div>
     <h3 class="achievement-modal-name" id="modalAchievementName"></h3>
     <p class="achievement-modal-desc" id="modalAchievementDesc"></p>
+    <button class="achievement-modal-btn" id="modalAchievementClose">确定</button>
   </div>
 
   <script>
 // ========== 配置项 ==========
     const CONFIG = {
-      // 答题素材：移除正经衣服
+      // 答题素材：移除「正经衣服」
       answerImages: {
         '酒馆伙计': '酒馆伙计.png',
         '宋': '宋.jpg',
@@ -552,10 +553,10 @@
         'img3': 'img3.jpg',
         'img4': 'img4.jpg'
       },
-      // 广告素材：原有广告加入正经衣服图片
+      // 广告素材：新广告添加「正经衣服.jpg」
       adMaterials: {
-        original: ['广告.png', '广告2.jpg', '广告3.jpg', '正经衣服.jpg'],
-        new: ['橙帕.jpg', '潮男帕.jpg', '潮男帕的后背.jpg'],
+        original: ['广告.png', '广告2.jpg', '广告3.jpg'],
+        new: ['橙帕.jpg', '潮男帕.jpg', '潮男帕的后背.jpg', '正经衣服.jpg'],
         cover: '广告封面.gif'
       },
       // 恢复所有初始题目
@@ -569,12 +570,11 @@
         {id:6,text:'大富哥是哪位？',type:'single-key',correct:'朝南',msgWin:'朝哥请表演一下那个！💰💰💰',msgLose:'不，这位应该不会给你钱。',achievement:'goldCoin'},
         {id:7,text:'你好。请嬷——',type:'single-key',correct:'Adams',msgWin:'“我可是直男呀！”',msgLose:'诶？那也不错。'}
       ],
-      timeLimit: 10, // 倒计时10s
+      timeLimit: 10, // 倒计时改为10s
       scorePerCorrect: 5,
       maxScore: 100,
       maxAdRepeat: 2, // 广告图片最多重复2次
-      maxQuestionRepeat: 2, // 题目最多连续出现2次
-      achievementModalDuration: 2000 // 成就弹窗显示时长
+      maxQuestionRepeat: 2 // 题目最多连续出现2次
     };
 
     // ========== 全局状态 ==========
@@ -594,8 +594,11 @@
       hasGotPBrother: false,
       unlockedAchievements: new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []),
       triggeredScorePopups: new Set(),
+      // 新增：广告图片计数
       adImgRecord: { original: { lastImg: '', repeatCount: 0 }, new: { lastImg: '', repeatCount: 0 } },
+      // 新增：题目计数
       questionRecord: { lastId: -1, repeatCount: 0 },
+      // 新增：选项位置计数
       positionRecord: { lastPos: -1, repeatCount: 0 }
     };
 
@@ -630,10 +633,11 @@
       achievementWall: document.getElementById('achievementWall'),
       achievementWallClose: document.getElementById('achievementWallClose'),
       achievementList: document.getElementById('achievementList'),
-      // 新增：成就弹窗元素
+      // ========== 新增：成就弹窗DOM ==========
       achievementModal: document.getElementById('achievementModal'),
       modalAchievementName: document.getElementById('modalAchievementName'),
-      modalAchievementDesc: document.getElementById('modalAchievementDesc')
+      modalAchievementDesc: document.getElementById('modalAchievementDesc'),
+      modalAchievementClose: document.getElementById('modalAchievementClose')
     };
 // ========== 工具函数 ==========
     function handleImageError(img, altText) {
@@ -710,7 +714,7 @@
       return finalOptions;
     }
 
-    // 修改：成就解锁改为弹窗提示
+    // ========== 修改：解锁成就函数，添加弹窗逻辑 ==========
     function unlockAchievement(achievementId) {
       if (gameState.unlockedAchievements.has(achievementId)) return;
       gameState.unlockedAchievements.add(achievementId);
@@ -718,18 +722,11 @@
       renderAchievementWall();
       const achievement = CONFIG.achievements[achievementId];
       // 显示成就弹窗
-      showAchievementModal(achievement.name, achievement.desc);
-    }
-
-    // 新增：显示成就弹窗函数
-    function showAchievementModal(name, desc) {
-      el.modalAchievementName.textContent = name;
-      el.modalAchievementDesc.textContent = desc;
-      el.achievementModal.classList.add('show');
-      // 自动关闭弹窗
-      setTimeout(() => {
-        el.achievementModal.classList.remove('show');
-      }, CONFIG.achievementModalDuration);
+      el.modalAchievementName.textContent = achievement.name;
+      el.modalAchievementDesc.textContent = achievement.desc || '';
+      el.achievementModal.classList.remove('hidden-cls');
+      // 同时在消息框提示
+      showMessage(`解锁成就：${achievement.name}`, 'win');
     }
 
     function showMessage(text, type = 'normal') {
@@ -763,6 +760,14 @@
       handleImageError(el.adCoverGif, '广告封面');
       renderAchievementWall();
       resetGame();
+      // ========== 绑定成就弹窗关闭按钮 ==========
+      el.modalAchievementClose.addEventListener('click', () => {
+        el.achievementModal.classList.add('hidden-cls');
+      });
+      el.modalAchievementClose.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        el.achievementModal.classList.add('hidden-cls');
+      }, { passive: false });
     }
 
     function bindAllEvents() {
@@ -906,7 +911,7 @@ function handleOptionClick() {
       let isCorrect = false;
       let resultMsg = '';
 
-      // ========== 选项位置计数 ==========
+      // ========== 新增：选项位置计数 ==========
       const posRecord = gameState.positionRecord;
       if (selectedIndex === posRecord.lastPos) {
         posRecord.repeatCount++;
@@ -923,7 +928,7 @@ function handleOptionClick() {
         isCorrect = selectedKey === q.correct;
         resultMsg = isCorrect ? q.msgWin : q.msgLose;
 
-        // 朝南题目选错img4触发成就
+        // ========== 新增：朝南题目选错img4触发成就 ==========
         if (q.id === 6 && selectedKey === 'img4' && !isCorrect) {
           unlockAchievement('heLovesYou');
         }
@@ -936,7 +941,7 @@ function handleOptionClick() {
         resultMsg = res.msg;
       }
 
-      // 满分后仅显示指定文字
+      // ========== 新增：满分后仅显示指定文字 ==========
       if (gameState.score === CONFIG.maxScore) {
         resultMsg = '已经...满了...♂♂♂';
       }
@@ -1008,7 +1013,7 @@ function handleOptionClick() {
       showMessage('点击「开始游戏」开始挑战', 'normal');
     }
 
-    // 重置成就逻辑：yeah♂不重置成就
+    // ========== 重置成就逻辑修改：yeah♂不重置 ==========
     function resetAchievements(isYeah) {
       if (!isYeah) {
         gameState.unlockedAchievements.clear();
@@ -1039,7 +1044,7 @@ function handleOptionClick() {
       });
     }
 
-    // ========== 广告逻辑 ==========
+    // ========== 广告逻辑修改：图片最多重复2次 ==========
     function bindAdEvents() {
       // 原有广告关闭
       el.originalAdClose.addEventListener('click', () => toggleModal(el.adConfirmModal, true));
@@ -1068,7 +1073,7 @@ function handleOptionClick() {
         showMessage('已关闭换装广告', 'normal');
       }, { passive: false });
 
-      // 新广告点击（帕字图片展示）
+      // 新广告点击（帕字图片+正经衣服 展示）
       el.newAdCta.addEventListener('click', () => {
         showRandomAdImg('new');
         unlockAchievement('fashionIcon');
