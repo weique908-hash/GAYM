@@ -712,4 +712,242 @@
 
       // 取消结束游戏
       function cancelEndGame() {
-        cl
+        closePopup(endGameConfirmPopup);
+        // 继续游戏
+        if (gameActive) {
+          playable = true;
+          timer = setInterval(() => {
+            timeLeft--;
+            timerEl.textContent = `${timeLeft}s`;
+            if (timeLeft <= 0) {
+              clearInterval(timer);
+              playable = false;
+              wrongCount++;
+              showMessage('杂鱼 慢死了', 'lose');
+              consecutiveImg1Count = 0;
+              consecutiveNotImg3Count = 0;
+              setTimeout(() => gameActive && startRound(), 1000);
+            }
+          }, 1000);
+        }
+      }
+
+      // 显示结束游戏统计
+      function showEndGameStats() {
+        statsScore.textContent = score;
+        statsRound.textContent = round;
+        statsCorrect.textContent = correctCount;
+        statsWrong.textContent = wrongCount;
+        showPopup(endGameStatsPopup);
+      }
+
+      // 结束游戏（弹出确认框）
+      function showEndGameConfirm() {
+        showPopup(endGameConfirmPopup);
+      }
+
+      // 确认结束游戏
+      function confirmEndGame() {
+        closePopup(endGameConfirmPopup);
+        showEndGameStats();
+      }
+
+      // 显示重置成就确认框
+      function showResetAchieveConfirm() {
+        showPopup(resetAchieveConfirmPopup);
+      }
+
+      // 确认重置成就（选"是"）
+      function confirmResetAchieve() {
+        closePopup(resetAchieveConfirmPopup);
+        resetAchievements();
+      }
+
+      // 重置成就选"yeah♂"（解锁隐藏成就）
+      function yeahResetAchieve() {
+        closePopup(resetAchieveConfirmPopup);
+        unlockAchievement('omg'); // 解锁隐藏成就OMG♂
+        showMessage('你发现了什么？', 'win');
+      }
+
+      // 广告相关逻辑
+      function openAd() {
+        const newTab = window.open(CONFIG.adLink, '_blank');
+        !newTab && showMessage('请允许弹出窗口查看广告', 'lose');
+        adCloseModal.classList.remove('show');
+      }
+
+      function closeAdWithInsult() {
+        showMessage('放你的屁。', 'lose');
+        adCloseModal.classList.remove('show');
+        document.querySelector('footer.ad').style.display = 'none';
+      }
+
+      function closeAdWithTaunt() {
+        showMessage('你瞅啥？', 'lose');
+        adCloseModal.classList.remove('show');
+        document.querySelector('footer.ad').style.display = 'none';
+      }
+
+      // 事件绑定
+      // 开始游戏
+      btnStart.ontouchend = (e) => {
+        e.preventDefault();
+        gameActive = true;
+        btnEndGame.style.display = 'inline-block'; // 显示结束游戏按钮
+        // 隐藏成就墙入口
+        btnAchievementWall.style.display = 'none';
+        btnResetAchieve.style.display = 'none';
+        startRound();
+      };
+      btnStart.onclick = () => {
+        gameActive = true;
+        btnEndGame.style.display = 'inline-block';
+        btnAchievementWall.style.display = 'none';
+        btnResetAchieve.style.display = 'none';
+        startRound();
+      };
+
+      // 重置游戏
+      btnRestart.ontouchend = (e) => {
+        e.preventDefault();
+        resetGame();
+      };
+      btnRestart.onclick = resetGame;
+
+      // 结束游戏（弹出确认框）
+      btnEndGame.ontouchend = (e) => {
+        e.preventDefault();
+        showEndGameConfirm();
+      };
+      btnEndGame.onclick = showEndGameConfirm;
+
+      // 确认结束游戏
+      btnConfirmEnd.ontouchend = (e) => {
+        e.preventDefault();
+        confirmEndGame();
+      };
+      btnConfirmEnd.onclick = confirmEndGame;
+
+      // 取消结束游戏
+      btnCancelEnd.ontouchend = (e) => {
+        e.preventDefault();
+        cancelEndGame();
+      };
+      btnCancelEnd.onclick = cancelEndGame;
+
+      // 结束游戏统计弹窗返回主页
+      statsPopupBtn.ontouchend = (e) => {
+        e.preventDefault();
+        closePopup(endGameStatsPopup);
+        resetGame();
+      };
+      statsPopupBtn.onclick = () => {
+        closePopup(endGameStatsPopup);
+        resetGame();
+      };
+
+      // 重置成就（弹出确认框）
+      btnResetAchieve.ontouchend = (e) => {
+        e.preventDefault();
+        showResetAchieveConfirm();
+      };
+      btnResetAchieve.onclick = showResetAchieveConfirm;
+
+      // 确认重置成就（选"是"）
+      btnConfirmReset.ontouchend = (e) => {
+        e.preventDefault();
+        confirmResetAchieve();
+      };
+      btnConfirmReset.onclick = confirmResetAchieve;
+
+      // 重置成就选"yeah♂"
+      btnYeahReset.ontouchend = (e) => {
+        e.preventDefault();
+        yeahResetAchieve();
+      };
+      btnYeahReset.onclick = yeahResetAchieve;
+
+      // 广告关闭
+      adCloseBtn.ontouchend = (e) => {
+        e.preventDefault();
+        adCloseModal.classList.add('show');
+      };
+      adCloseBtn.onclick = () => adCloseModal.classList.add('show');
+
+      // 模态框选项
+      btnAdOption1.ontouchend = (e) => {
+        e.preventDefault();
+        openAd();
+      };
+      btnAdOption1.onclick = openAd;
+
+      btnAdOption2.ontouchend = (e) => {
+        e.preventDefault();
+        closeAdWithInsult();
+      };
+      btnAdOption2.onclick = closeAdWithInsult;
+
+      btnAdOption3.ontouchend = (e) => {
+        e.preventDefault();
+        closeAdWithTaunt();
+      };
+      btnAdOption3.onclick = closeAdWithTaunt;
+
+      // 弹窗按钮
+      scorePopupBtn.ontouchend = (e) => {
+        e.preventDefault();
+        closePopup(scorePopup);
+        if (gameActive) {
+          setTimeout(() => startRound(), 300);
+        }
+      };
+      scorePopupBtn.onclick = () => {
+        closePopup(scorePopup);
+        if (gameActive) {
+          setTimeout(() => startRound(), 300);
+        }
+      };
+
+      achievementPopupBtn.ontouchend = (e) => {
+        e.preventDefault();
+        closePopup(achievementPopup);
+        if (gameActive) {
+          setTimeout(() => startRound(), 300);
+        }
+      };
+      achievementPopupBtn.onclick = () => {
+        closePopup(achievementPopup);
+        if (gameActive) {
+          setTimeout(() => startRound(), 300);
+        }
+      };
+
+      // 成就墙相关
+      btnAchievementWall.ontouchend = (e) => {
+        e.preventDefault();
+        toggleAchievementWall(true);
+      };
+      btnAchievementWall.onclick = () => toggleAchievementWall(true);
+
+      achievementWallClose.ontouchend = (e) => {
+        e.preventDefault();
+        toggleAchievementWall(false);
+      };
+      achievementWallClose.onclick = () => toggleAchievementWall(false);
+
+      // 模态框背景关闭
+      adCloseModal.ontouchend = (e) => {
+        if (e.target === adCloseModal) adCloseModal.classList.remove('show');
+      };
+      adCloseModal.onclick = (e) => {
+        if (e.target === adCloseModal) adCloseModal.classList.remove('show');
+      };
+
+      // 初始化
+      resetGame();
+      initAchievementWall();
+    };
+  </script>
+</body>
+</html>
