@@ -2,58 +2,118 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <!-- 强制移动端适配，禁用缩放 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>你好啊我是男同</title>
   <style>
     :root{--bg:#0f1724;--card:#0b1220;--accent:#ffb86b;--muted:#94a3b8;--win:#34d399;--lose:#fb7185;font-family:Inter,system-ui,Arial}
-    html,body{height:100%;margin:0;padding:16px;background:linear-gradient(180deg,var(--bg),#071025);color:#e6eef8;display:flex;align-items:center;justify-content:center}
-    .card{width:100%;max-width:760px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#071025);color:#e6eef8;display:flex;align-items:center;justify-content:center;padding:16px}
+    .card{width:100%;max-width:760px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03);position:relative}
+    header{display:flex;align-items:center;justify-content:space-between}
     h1{font-size:18px;margin:0}
-    .game-area{display:flex;flex-direction:column;gap:12px}
-    .board{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    p.lead{margin:6px 0 0;font-size:13px;color:var(--muted)}
+    .game-area{display:flex;gap:12px;margin-top:12px}
+    .board{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
     .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .cell{background:#0c1220;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;/* 强制允许触摸 */pointer-events:auto !important;position:relative;z-index:10}
+    .cell{background:#0c1220;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:120px}
     .cell img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
-    .sidebar{display:flex;flex-direction:row;gap:10px;width:100%}
-    .stat{flex:1;background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;text-align:center}
-    .stat-label{font-size:12px;color:var(--muted)}
-    .stat-value{font-size:18px;font-weight:700}
-    .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-    .btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;font-weight:700;cursor:pointer;/* 强制允许触摸 */pointer-events:auto !important;position:relative;z-index:10}
+    .sidebar{width:220px;display:flex;flex-direction:column;gap:10px}
+    .stat{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;text-align:center}
+    .controls{display:flex;flex-wrap:wrap;gap:8px}
+    .btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;font-weight:700;cursor:pointer}
     .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent)}
-    .message{padding:8px;border-radius:8px;text-align:center;margin:8px 0;display:none}
-    .message.win{color:var(--win);display:block}
-    .message.lose{color:var(--lose);display:block}
-    .message.limit{color:var(--accent);font-size:16px;font-weight:700;animation:pulse 0.5s ease-in-out infinite alternate;background:rgba(255,184,107,0.1);border:1px solid rgba(255,184,107,0.3);display:block}
-    @keyframes pulse{from{transform:scale(1);opacity:0.9}to{transform:scale(1.05);opacity:1}}
+    .btn.game-over{display:none;margin-top:8px;width:100%}
+    .btn.game-over.show{display:block}
+    .btn.reset-achievements{background:transparent;border:1px solid rgba(255,184,107,0.3);color:var(--accent);font-size:12px;padding:6px 8px;margin-top:4px;width:100%}
+    .message{padding:8px;border-radius:8px;text-align:center;display:none}
+    .message.show{display:block}
+    .message.win{color:var(--win)}
+    .message.lose{color:var(--lose)}
+    .message.limit{
+      color:var(--accent);
+      font-size:16px;
+      font-weight:700;
+      animation: pulse 0.5s ease-in-out infinite alternate;
+      background: rgba(255,184,107,0.1);
+      border:1px solid rgba(255,184,107,0.3);
+    }
+    @keyframes pulse{
+      from{transform:scale(1);opacity:0.9}
+      to{transform:scale(1.05);opacity:1}
+    }
     .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:18px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
     .score-notice.show{display:block}
     @keyframes popup{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
     /* 广告区域 */
-    footer.ad{margin-top:12px;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;position:relative}
-    .ad-close-btn{position:absolute;top:6px;right:6px;background:var(--lose);color:white;border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;/* 强制允许触摸 */pointer-events:auto !important}
-    .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none;/* 强制允许触摸 */pointer-events:auto !important}
+    footer.ad{margin-top:12px;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;transition:all 0.3s ease;position:relative}
+    .ad-close-btn{position:absolute;top:6px;right:6px;background:var(--lose);color:white;border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10}
+    .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none}
     .flash{animation:flash 1s linear infinite}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:0.25}}
-    /* 模态框样式（简化，强制触摸） */
+    /* 成就墙入口 */
+    .achievement-entrance{margin-top:12px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s ease}
+    .achievement-entrance:hover{background:rgba(255,255,255,0.01)}
+    .achievement-entrance h3{font-size:14px;margin:0;color:var(--accent);display:flex;align-items:center;gap:6px}
+    .achievement-count{font-size:12px;color:var(--muted)}
+    /* 成就墙样式 */
+    .achievements{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);margin-top:8px;display:none}
+    .achievements.show{display:block}
+    .achievement-list{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+    .achievement-item{background:rgba(255,255,255,0.01);padding:6px;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:4px;transition:all 0.2s ease}
+    .achievement-item:hover{background:rgba(255,255,255,0.02)}
+    .achievement-item.locked{color:var(--muted);opacity:0.6}
+    .achievement-item.unlocked{color:var(--win)}
+    .achievement-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+    .achievement-icon.locked::after{content:"🔒"}
+    .achievement-icon.unlocked::after{content:"🏆"}
+    .achievement-info{flex:1}
+    .achievement-name{font-weight:500}
+    .achievement-desc{font-size:10px;color:var(--muted);margin-top:2px;display:none}
+    .achievement-item.unlocked .achievement-desc{display:block}
+    /* 分享按钮样式 */
+    .share-container{margin-top:8px;display:flex;gap:8px}
+    .share-btn{flex:1;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all 0.2s}
+    .share-btn:hover{background:rgba(255,255,255,0.02)}
+    .share-btn i{font-size:14px}
+    .share-btn span{font-size:12px}
+    /* 模态框样式 */
     .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
     .modal.show{display:flex}
     .modal-content{background:var(--card);padding:20px;border-radius:12px;width:90%;max-width:400px;border:1px solid rgba(255,255,255,0.05)}
-    .modal-title{font-size:16px;margin:0 0 12px;color:var(--acpx;color:var(--accent);text-align:center}
+    .modal-title{font-size:16px;margin:0 0 12px;color:var(--accent)}
+    .modal-message{font-size:14px;margin:0 0 16px;color:var(--muted)}
     .modal-buttons{display:flex;flex-direction:column;gap:8px}
-    .modal-btn{padding:10px 16px;border-radius:8px;border:none;font-weight:700;cursor:pointer;text-align:center;/* 强制允许触摸 */pointer-events:auto !important;position:relative;z-index:1001}
+    .modal-btn{padding:10px 16px;border-radius:8px;border:none;font-weight:700;cursor:pointer;text-align:center}
     .modal-btn.option1{background:var(--win);color:#071025}
     .modal-btn.option2{background:var(--lose);color:white}
     .modal-btn.option3{background:var(--accent);color:#071025}
+    /* 游戏结束统计 */
+    .game-stats{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);margin-top:12px;display:none}
+    .game-stats.show{display:block}
+    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+    .stat-item{background:rgba(255,255,255,0.01);padding:8px;border-radius:6px}
+    .stat-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+    .stat-value{font-size:16px;font-weight:700}
+    /* 游戏专注模式 */
+    .game-active .achievement-entrance,
+    .game-active .achievements,
+    .game-active footer.ad,
+    .game-active .game-stats{display:none !important}
+    .game-active .card{padding:14px}
+    .game-active .game-area{margin-top:0}
+    @media (max-width:700px){.game-area{flex-direction:column}.sidebar{width:100%;flex-direction:row}.achievement-list{grid-template-columns:repeat(3,1fr)}.stats-grid{grid-template-columns:repeat(2,1fr)}}
   </style>
+  <!-- 引入Font Awesome用于图标 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <div class="card">
     <header>
-      <h1>你好啊我是男同</h1>
-      <div style="font-size:12px;color:var(--muted)">点击"开始游戏"挑战</div>
+      <div>
+        <h1>你好啊我是男同</h1>
+        <p class="lead">每关是随机题目。请按下面"开始"测试。图片与广告素材请替换为你的文件或外链。</p>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">适合当作互动广告素材</div>
     </header>
 
     <div class="game-area">
@@ -63,33 +123,155 @@
           <div id="questionText" style="font-size:13px;color:var(--muted)">题目将随机出现</div>
         </div>
 
-        <div id="grid" class="grid"></div>
-        <div id="message" class="message"></div>
-        <div class="controls">
-          <button id="btnStart" class="btn">开始♂游戏</button>
-          <button id="btnRestart" class="btn secondary">重置</button>
-          <button id="btnEndGame" class="btn secondary">结束游戏</button>
+        <div id="grid" class="grid" aria-label="角色网格"></div>
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+        <button id="btnPlayAgain" class="btn game-over">再来一局</button>
+        <button id="btnEndGame" class="btn game-over secondary">结束游戏</button>
+        
+        <!-- 分享按钮 -->
+        <div class="share-container">
+          <button id="btnShareWechat" class="share-btn">
+            <i class="fab fa-weixin" style="color:#07c160"></i>
+            <span>微信</span>
+          </button>
+          <button id="btnShareQQ" class="share-btn">
+            <i class="fab fa-qq" style="color:#12b7f5"></i>
+            <span>QQ</span>
+          </button>
+          <button id="btnShareScreenshot" class="share-btn">
+            <i class="fas fa-share-alt" style="color:var(--accent)"></i>
+            <span>截图</span>
+          </button>
         </div>
       </div>
 
-      <div class="sidebar">
-        <div class="stat">
-          <div class="stat-label">倒计时</div>
-          <div id="timer" class="stat-value">--</div>
+      <aside class="sidebar">
+        <div class="stat"><div style="font-size:12px;color:var(--muted)">倒计时</div><div id="timer" style="font-size:18px;font-weight:700">--</div></div>
+        <div class="stat"><div style="font-size:12px;color:var(--muted)">分数</div><div id="score" style="font-size:18px;font-weight:700">0</div></div>
+        <div class="controls">
+          <button id="btnRestart" class="btn secondary">重置</button>
+          <button id="btnStart" class="btn">开始♂游戏</button>
         </div>
-        <div class="stat">
-          <div class="stat-label">分数</div>
-          <div id="score" class="stat-value">0</div>
+        <button id="btnResetAchievements" class="btn reset-achievements">成♂就重开</button>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">提示：点击任一图片选择答案（单选）</div>
+      </aside>
+    </div>
+
+    <!-- 成就墙入口 -->
+    <div id="achievementEntrance" class="achievement-entrance">
+      <h3><i class="fas fa-trophy" style="color:var(--accent)"></i> 成就墙</h3>
+      <div id="achievementCount" class="achievement-count">0/6 成就已解锁</div>
+    </div>
+
+    <!-- 成就墙 -->
+    <div id="achievementsPanel" class="achievements">
+      <div class="achievement-list">
+        <div class="achievement-item locked" data-id="straight">
+          <div class="achievement-icon locked"></div>
+          <div class="achievement-info">
+            <div class="achievement-name">我是直男</div>
+            <div class="achievement-desc">选择“直男”选项</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="gayPride">
+          <div class="achievement-icon locked"></div>
+          <div class="achievement-info">
+            <div class="achievement-name">骄傲之GAY</div>
+            <div class="achievement-desc">选择“GAY”选项</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="chef">
+          <div class="achievement-icon locked"></div>
+          <div class="achievement-info">
+            <div class="achievement-name">你是食材吗</div>
+            <div class="achievement-desc">正确找出厨师</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="therapist">
+          <div class="achievement-icon locked"></div>
+          <div class="achievement-info">
+            <div class="achievement-name">心理治疗师</div>
+            <div class="achievement-desc">正确找出心理治疗师</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="maxScore">
+          <div class="achievement-icon locked"></div>
+          <div class="achievement-info">
+            <div class="achievement-name">天选男同🌈</div>
+            <div class="achievement-desc">达到满分100分</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="forgotSomeone">
+          <div class="achievement-icon locked"></div>
+          <div class="achievement-info">
+            <div class="achievement-name">好像忘了谁...</div>
+            <div class="achievement-desc">连续四次不选择img3.jpg图片</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="forceful">
+          <div class="achievement-icon locked"></div>
+          <div class="achievement-info">
+            <div class="achievement-name">强人所难♂</div>
+            <div class="achievement-desc">连续四次选择img1.jpg图片</div>
+          </div>
+        </div>
+        <!-- 隐藏成就不在成就墙显示 -->
+      </div>
+    </div>
+
+    <!-- 游戏结束统计 -->
+    <div id="gameStats" class="game-stats">
+      <h3 style="font-size:14px;margin:0 0 8px;color:var(--accent)">游戏统计</h3>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">最终得分</div>
+          <div id="finalScore" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">正确次数</div>
+          <div id="correctCount" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">错误次数</div>
+          <div id="wrongCount" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">总关卡数</div>
+          <div id="totalRounds" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">解锁成就</div>
+          <div id="unlockedAchievements" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">正确率</div>
+          <div id="accuracyRate" class="stat-value">0%</div>
         </div>
       </div>
     </div>
 
-    <!-- 广告区域 -->
+    <!-- 广告区域（带关闭按钮） -->
     <footer class="ad">
       <button id="adCloseBtn" class="ad-close-btn">×</button>
-      <div style="font-size:13px;color:var(--muted)">广告区</div>
-      <a class="cta flash" href="https://你的推广链接.com">点击♂这里</a>
+      <div style="font-size:13px;color:var(--muted)">广告区（点击可跳转到你的推广页面）</div>
+      <a id="ctaLink" class="cta" href="#" role="link">
+        <img id="ctaImg" src="flash.gif" alt="点击♂这里（我还没调好）" style="width:36px;height:36px;object-fit:contain;border-radius:6px"> 
+        <span class="flash">点击♂这里（我还没调好）</span>
+      </a>
     </footer>
+  </div>
+  <div id="scoreNotice" class="score-notice"></div>
+
+  <!-- 重置成就模态框 -->
+  <div id="resetAchievementsModal" class="modal">
+    <div class="modal-content">
+      <h3 class="modal-title">成♂就重开</h3>
+      <p class="modal-message">hwj温馨提示：是否要重置成就（反正我也没添加更多）</p>
+      <div class="modal-buttons">
+        <button id="btnConfirmReset" class="modal-btn confirm">是</button>
+        <button id="btnSpecialReset" class="modal-btn special">yeah♂</button>
+      </div>
+    </div>
   </div>
 
   <!-- 广告关闭确认模态框 -->
@@ -104,295 +286,431 @@
     </div>
   </div>
 
-  <div id="scoreNotice" class="score-notice"></div>
-
   <script>
-    // 等待DOM完全加载（兼容所有浏览器）
-    window.onload = function() {
-      // 1. 基础配置（简化，避免变量冲突）
+    document.addEventListener('DOMContentLoaded', function() {
       const CONFIG = {
-        images: ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg"],
+        images: [
+          "img1.jpg",
+          "img2.jpg",
+          "img3.jpg",
+          "img4.jpg"
+        ],
+        adMedia: "ad-banner.gif",
         adLink: "https://你的推广链接.com",
         timeLimit: 8,
         maxScore: 100,
-        pointsPerCorrect: 5
+        pointsPerCorrect: 5,
       };
 
-      // 2. 题目配置（保留核心）
       const QUESTIONS = [
         {
+          id:1,
           text: '找出里面所有男同',
-          type: 'special',
-          onSelect: () => ({ ok: false, msg: '哈哈骗你的，我只设置了单选' })
+          type:'special-single',
+          onSelect: function(idx){
+            return {ok:false, msg:'哈哈骗你的，我只设置了单选'};
+          }
         },
         {
+          id:2,
           text: '找出真正的厨师',
-          type: 'single',
-          correctIdx: 0,
-          onCorrect: '你看起来很好吃',
-          onWrong: 'Cazzo，你不认识我吗'
+          type:'single',
+          correctOriginalIndex: 0,
+          onCorrectMsg: '你看起来很好吃',
+          onWrongMsg: 'Cazzo，你不认识我吗',
+          achievement: 'chef'
         },
         {
+          id:3,
           text: '找出失去了球棍的心理治疗师',
-          type: 'single',
-          correctIdx: 3,
-          onCorrect: '隔壁他男人在双持ing',
-          onWrong: '再选错就过来心理治疗'
+          type:'single',
+          correctOriginalIndex: 3,
+          onWrongMsg: '再选错就过来心理治疗',
+          onCorrectMsg: '隔壁他男人在双持ing',
+          achievement: 'therapist'
         },
         {
+          id:4,
           text: '找出图中的直男',
-          type: 'multi-text',
-          onSelect: (idx) => {
-            if (idx === 0 || idx === 1) {
-              return { ok: true, msg: '💞我们是真正的♂直男♂呀' };
+          type:'single-multi-text',
+          onSelect: function(originalIndex){
+            if(originalIndex===0||originalIndex===1) {
+              unlockAchievement('straight');
+              return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
             } else {
-              return { ok: true, msg: '🌈🌈🌈骄傲之♂GAY🌈🌈🌈' };
+              unlockAchievement('gayPride');
+              return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
             }
           }
         }
       ];
 
-      // 3. 获取DOM元素（确保所有元素存在）
-      const gridEl = document.getElementById('grid');
-      const timerEl = document.getElementById('timer');
-      const scoreEl = document.getElementById('score');
-      const messageEl = document.getElementById('message');
-      const questionTextEl = document.getElementById('questionText');
-      const roundEl = document.getElementById('round');
-      const btnStart = document.getElementById('btnStart');
-      const btnRestart = document.getElementById('btnRestart');
-      const btnEndGame = document.getElementById('btnEndGame');
-      const adCloseBtn = document.getElementById('adCloseBtn');
-      const adCloseModal = document.getElementById('adCloseModal');
-      const btnAdOption1 = document.getElementById('btnAdOption1');
-      const btnAdOption2 = document.getElementById('btnAdOption2');
-      const btnAdOption3 = document.getElementById('btnAdOption3');
-      const scoreNoticeEl = document.getElementById('scoreNotice');
+      let gridEl = document.getElementById('grid');
+      let timerEl = document.getElementById('timer');
+      let scoreEl = document.getElementById('score');
+      let messageEl = document.getElementById('message');
+      let questionTextEl = document.getElementById('questionText');
+      let roundEl = document.getElementById('round');
+      let ctaLink = document.getElementById('ctaLink');
+      let ctaImg = document.getElementById('ctaImg');
+      let scoreNoticeEl = document.getElementById('scoreNotice');
+      let btnPlayAgain = document.getElementById('btnPlayAgain');
+      let btnEndGame = document.getElementById('btnEndGame');
+      let achievementEntrance = document.getElementById('achievementEntrance');
+      let achievementsPanel = document.getElementById('achievementsPanel');
+      let achievementCountEl = document.getElementById('achievementCount');
+      let btnShareWechat = document.getElementById('btnShareWechat');
+      let btnShareQQ = document.getElementById('btnShareQQ');
+      let btnShareScreenshot = document.getElementById('btnShareScreenshot');
+      let btnResetAchievements = document.getElementById('btnResetAchievements');
+      let resetAchievementsModal = document.getElementById('resetAchievementsModal');
+      let btnConfirmReset = document.getElementById('btnConfirmReset');
+      let btnSpecialReset = document.getElementById('btnSpecialReset');
+      let gameStats = document.getElementById('gameStats');
+      let finalScoreEl = document.getElementById('finalScore');
+      let correctCountEl = document.getElementById('correctCount');
+      let wrongCountEl = document.getElementById('wrongCount');
+      let totalRoundsEl = document.getElementById('totalRounds');
+      let unlockedAchievementsEl = document.getElementById('unlockedAchievements');
+      let accuracyRateEl = document.getElementById('accuracyRate');
+      // 广告相关元素
+      let adCloseBtn = document.getElementById('adCloseBtn');
+      let adCloseModal = document.getElementById('adCloseModal');
+      let btnAdOption1 = document.getElementById('btnAdOption1');
+      let btnAdOption2 = document.getElementById('btnAdOption2');
+      let btnAdOption3 = document.getElementById('btnAdOption3');
 
-      // 4. 游戏状态（简化，避免状态混乱）
       let timeLeft = CONFIG.timeLimit;
       let timer = null;
       let score = 0;
       let round = 0;
       let currentQuestion = null;
       let playable = false;
+      let shuffledOriginalIndexes = [];
+      let triggeredScoreNotices = new Set();
+      // 使用localStorage保存成就，重置游戏不会消失
+      let unlockedAchievements = new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []);
+      let consecutiveImg1Count = 0;
+      let consecutiveNotImg3Count = 0;
+      let correctCount = 0;
+      let wrongCount = 0;
       let gameActive = false;
+      const totalAchievements = 7; // 不包括隐藏成就
 
-      // 5. 核心工具函数
-      // 显示提示
-      function showNotice(text) {
-        scoreNoticeEl.textContent = text;
-        scoreNoticeEl.classList.add('show');
-        setTimeout(() => scoreNoticeEl.classList.remove('show'), 3000);
+      ctaImg.src = CONFIG.adMedia;
+      ctaLink.href = CONFIG.adLink;
+
+      // 移动端触摸+点击事件绑定函数
+      function bindTap(elemId, callback) {
+        const elem = document.getElementById(elemId);
+        if (!elem) return;
+
+        elem.addEventListener('touchend', (e) => {
+          e.preventDefault(); // 阻止默认行为（如页面滚动）
+          callback();
+        });
+
+        elem.addEventListener('click', callback); // 兼容桌面端
       }
 
-      // 显示消息
-      function showMessage(text, type) {
-        messageEl.textContent = text;
-        messageEl.className = 'message';
-        if (type === 'win') messageEl.classList.add('win');
-        else if (type === 'lose') messageEl.classList.add('lose');
-        else if (type === 'limit') messageEl.classList.add('limit');
+      // 更新成就计数
+      function updateAchievementCount() {
+        const count = unlockedAchievements.size;
+        achievementCountEl.textContent = `${count}/${totalAchievements} 成就已解锁`;
       }
 
-      // 随机打乱数组（带原索引）
-      function shuffleArr(arr) {
-        const newArr = [...arr];
-        const indexes = Array.from(arr.keys());
+      // 初始化成就显示
+      function initAchievements() {
+        document.querySelectorAll('.achievement-item').forEach(item => {
+          const id = item.getAttribute('data-id');
+          if (unlockedAchievements.has(id)) {
+            item.classList.remove('locked');
+            item.classList.add('unlocked');
+            item.querySelector('.achievement-icon').classList.remove('locked');
+            item.querySelector('.achievement-icon').classList.add('unlocked');
+          }
+        });
+        updateAchievementCount();
+      }
+
+      // 解锁成就函数
+      function unlockAchievement(achievementId) {
+        if (unlockedAchievements.has(achievementId)) return;
+        
+        unlockedAchievements.add(achievementId);
+        // 保存到localStorage
+        localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(unlockedAchievements)));
+        
+        const achievementItem = document.querySelector(`.achievement-item[data-id="${achievementId}"]`);
+        if (achievementItem) {
+          achievementItem.classList.remove('locked');
+          achievementItem.classList.add('unlocked');
+          achievementItem.querySelector('.achievement-icon').classList.remove('locked');
+          achievementItem.querySelector('.achievement-icon').classList.add('unlocked');
+          
+          // 显示成就解锁提示
+          showScoreNotice(`🏆 解锁成就：${achievementItem.querySelector('.achievement-name').textContent}`);
+        } else if (achievementId === 'omg') {
+          // 隐藏成就，只显示提示
+          showScoreNotice(`🏆 解锁隐藏成就：OMG♂`);
+        }
+        
+        updateAchievementCount();
+      }
+
+      // 重置成就
+      function resetAchievements(keepHidden = false) {
+        if (!keepHidden) {
+          unlockedAchievements.clear();
+        } else {
+          // 保留隐藏成就OMG♂
+          const temp = new Set();
+          if (unlockedAchievements.has('omg')) {
+            temp.add('omg');
+          }
+          unlockedAchievements = temp;
+        }
+        localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(unlockedAchievements)));
+        document.querySelectorAll('.achievement-item').forEach(item => {
+          item.classList.remove('unlocked');
+          item.classList.add('locked');
+          item.querySelector('.achievement-icon').classList.remove('unlocked');
+          item.querySelector('.achievement-icon').classList.add('locked');
+        });
+        updateAchievementCount();
+        showScoreNotice('成就已重置！');
+      }
+
+      // 分享功能
+      function shareToWechat() {
+        const shareText = `我在"你好啊我是男同"游戏中获得了${score}分，解锁了${unlockedAchievements.size}个成就！快来挑战我吧！`;
+        alert(`微信分享：${shareText}\n\n（实际项目中需要集成微信JS-SDK）`);
+      }
+
+      function shareToQQ() {
+        const shareText = `我在"你好啊我是男同"游戏中获得了${score}分，解锁了${unlockedAchievements.size}个成就！快来挑战我吧！`;
+        window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(window.location.href)}&title=你好啊我是男同&desc=${encodeURIComponent(shareText)}&summary=&site=`, '_blank', 'width=600,height=400');
+      }
+
+      function takeScreenshot() {
+        alert('截图功能已触发！\n\n（实际项目中需要引入html2canvas库）');
+      }
+
+      function shuffleArrayWithIndex(array) {
+        const newArr = [...array];
+        const originalIndexes = Array.from(array.keys());
         for (let i = newArr.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
-          [indexes[i], indexes[j]] = [indexes[j], indexes[i]];
+          [originalIndexes[i], originalIndexes[j]] = [originalIndexes[j], originalIndexes[i]];
         }
-        return { arr: newArr, indexes };
+        return { shuffledArr: newArr, originalIndexes: originalIndexes };
       }
 
-      // 渲染游戏网格
-      function renderGrid() {
+      function showScoreNotice(text) {
+        scoreNoticeEl.textContent = text;
+        scoreNoticeEl.classList.add('show');
+        setTimeout(() => {
+          scoreNoticeEl.classList.remove('show');
+        }, 3000);
+      }
+
+      function checkScoreMilestone() {
+        if (score >= 50 && !triggeredScoreNotices.has(50)) {
+          showScoreNotice('太棒了！50分！');
+          triggeredScoreNotices.add(50);
+        }
+        if (score >= CONFIG.maxScore && !triggeredScoreNotices.has(CONFIG.maxScore)) {
+          showScoreNotice('100分！天呐你就是男同之神！');
+          triggeredScoreNotices.add(CONFIG.maxScore);
+          unlockAchievement('maxScore');
+          btnPlayAgain.classList.add('show');
+          btnEndGame.classList.add('show');
+        }
+      }
+
+      function renderGrid(){
         gridEl.innerHTML = '';
-        const { arr: shuffledImgs, indexes: originalIndexes } = shuffleArr(CONFIG.images);
-        shuffledImgs.forEach((imgSrc, i) => {
-          const cell = document.createElement('div');
+        const imgs = CONFIG.images.slice(0,4);
+        const { shuffledArr, originalIndexes } = shuffleArrayWithIndex(imgs);
+        shuffledOriginalIndexes = originalIndexes;
+        for(let i=0;i<4;i++){
+          const cell = document.createElement('button');
           cell.className = 'cell';
-          cell.setAttribute('data-original-idx', originalIndexes[i]);
+          cell.setAttribute('data-visual-index', i);
           const img = document.createElement('img');
-          img.src = imgSrc;
-          img.alt = `角色${i+1}`;
+          img.alt = `角色 ${i+1}`;
+          img.src = shuffledArr[i] || '';
           cell.appendChild(img);
-          // 绑定触摸+点击事件（强制触发）
-          cell.ontouchend = (e) => {
-            e.preventDefault();
-            handleCellClick(cell);
-          };
-          cell.onclick = () => handleCellClick(cell);
+          // 单元格点击绑定触摸+点击
+          bindTap(cell, () => onCellClick(cell));
           gridEl.appendChild(cell);
-        });
+        }
       }
 
-      // 开始新一轮
-      function startRound() {
-        if (timer) clearInterval(timer);
+      function startRound(){
+        if(timer) clearInterval(timer);
         timeLeft = CONFIG.timeLimit;
-        timerEl.textContent = `${timeLeft}s`;
+        timerEl.textContent = timeLeft + 's';
         round++;
         roundEl.textContent = round;
-        currentQuestion = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+        currentQuestion = QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)];
         questionTextEl.textContent = currentQuestion.text;
         renderGrid();
         playable = true;
-        showMessage('', '');
-
-        // 倒计时
-        timer = setInterval(() => {
+        setMessage('','');
+        timer = setInterval(()=>{
           timeLeft--;
-          timerEl.textContent = `${timeLeft}s`;
-          if (timeLeft <= 0) {
+          timerEl.textContent = timeLeft + 's';
+          if(timeLeft<=0){
             clearInterval(timer);
             playable = false;
-            showMessage('杂鱼 慢死了', 'lose');
-            setTimeout(() => gameActive && startRound(), 1300);
+            handleTimeout();
           }
-        }, 1000);
+        },1000);
       }
 
-      // 处理单元格点击
-      function handleCellClick(cell) {
-        if (!playable) return;
+      function handleTimeout(){
+        if(!currentQuestion) return;
+        setMessage('杂鱼 慢死了','lose');
+        wrongCount++;
+        setTimeout(()=>{
+          if (gameActive) {
+            startRound();
+          }
+        },1300);
+      }
+
+      function onCellClick(cell){
+        if(!playable) return;
         playable = false;
         clearInterval(timer);
-        const originalIdx = Number(cell.getAttribute('data-original-idx'));
-        const res = currentQuestion.onSelect ? currentQuestion.onSelect(originalIdx) : null;
+        const visualIndex = Number(cell.getAttribute('data-visual-index'));
+        const originalIndex = shuffledOriginalIndexes[visualIndex];
 
-        if (currentQuestion.type === 'single') {
-          if (originalIdx === currentQuestion.correctIdx) {
-            if (score < CONFIG.maxScore) {
-              score += CONFIG.pointsPerCorrect;
-              scoreEl.textContent = score;
-              showMessage(currentQuestion.onCorrect, 'win');
-              showNotice(`+${CONFIG.pointsPerCorrect}分`);
-            } else {
-              showMessage('已经...极限了♂♂♂', 'limit');
-            }
-          } else {
-            showMessage(currentQuestion.onWrong, 'lose');
+        // 检查连续选择统计
+        if (originalIndex === 0) { // img1.jpg
+          consecutiveImg1Count++;
+          consecutiveNotImg3Count = 0;
+          if (consecutiveImg1Count >= 4) {
+            unlockAchievement('forceful');
+            consecutiveImg1Count = 0;
           }
-        } else if (res) {
-          res.ok ? showMessage(res.msg, 'win') : showMessage(res.msg, 'lose');
-          if (res.ok && score < CONFIG.maxScore) {
-            score += CONFIG.pointsPerCorrect;
-            scoreEl.textContent = score;
-            showNotice(`+${CONFIG.pointsPerCorrect}分`);
+        } else if (originalIndex !== 2) { // 不是img3.jpg
+          consecutiveNotImg3Count++;
+          consecutiveImg1Count = 0;
+          if (consecutiveNotImg3Count >= 4) {
+            unlockAchievement('forgotSomeone');
+            consecutiveNotImg3Count = 0;
           }
+        } else { // 选择了img3.jpg
+          consecutiveImg1Count = 0;
+          consecutiveNotImg3Count = 0;
         }
 
-        setTimeout(() => gameActive && startRound(), 1300);
+        if(currentQuestion.type==='special-single'){
+          setMessage('哈哈骗你的，我只设置了单选','lose');
+          wrongCount++;
+          setTimeout(()=>{
+            if (gameActive) {
+              startRound();
+            }
+          },1200);
+          return;
+        }
+
+        if(currentQuestion.type==='single'){
+          if(originalIndex===currentQuestion.correctOriginalIndex){
+            if (score < CONFIG.maxScore) {
+              score += CONFIG.pointsPerCorrect;
+              if (score > CONFIG.maxScore) score = CONFIG.maxScore;
+              scoreEl.textContent = score;
+              checkScoreMilestone();
+              setMessage(currentQuestion.onCorrectMsg,'win');
+              correctCount++;
+              
+              if (currentQuestion.achievement) {
+                unlockAchievement(currentQuestion.achievement);
+              }
+            } else {
+              setMessage('已经...极限了♂♂♂','limit');
+            }
+          } else {
+            setMessage(currentQuestion.onWrongMsg,'lose');
+            wrongCount++;
+          }
+          setTimeout(()=>{
+            if (gameActive) {
+              startRound();
+            }
+          },1300);
+          return;
+        }
+
+        if(currentQuestion.type==='single-multi-text'){
+          const res = currentQuestion.onSelect(originalIndex);
+          if(res){
+            if(res.ok){
+              if (score < CONFIG.maxScore) {
+                score += CONFIG.pointsPerCorrect;
+                if (score > CONFIG.maxScore) score = CONFIG.maxScore;
+                scoreEl.textContent = score;
+                checkScoreMilestone();
+                setMessage(res.msg,'win');
+                correctCount++;
+              } else {
+                setMessage('已经...极限了♂♂♂','limit');
+              }
+            }
+            else {
+              setMessage(res.msg,'lose');
+              wrongCount++;
+            }
+          }
+          setTimeout(()=>{
+            if (gameActive) {
+              startRound();
+            }
+          },1300);
+          return;
+        }
+
+        setMessage('发生错误，重试','lose');
+        wrongCount++;
+        setTimeout(()=>{
+          if (gameActive) {
+            startRound();
+          }
+        },1200);
       }
 
-      // 重置游戏
+      function setMessage(text, type){
+        messageEl.className = 'message';
+        if(type==='win') messageEl.classList.add('win','show');
+        else if(type==='lose') messageEl.classList.add('lose','show');
+        else if(type==='limit') messageEl.classList.add('limit','show');
+        if(text) messageEl.textContent = text; else messageEl.textContent = '';
+      }
+
       function resetGame() {
-        if (timer) clearInterval(timer);
+        if(timer) clearInterval(timer);
         round = 0;
         score = 0;
+        scoreEl.textContent = score;
         timeLeft = CONFIG.timeLimit;
         timerEl.textContent = '--';
-        scoreEl.textContent = '0';
-        roundEl.textContent = '—';
         gridEl.innerHTML = '';
-        showMessage('点击"开始♂游戏"开始挑战', '');
+        setMessage('点击"开始♂游戏"开始挑战','');
+        triggeredScoreNotices.clear();
+        consecutiveImg1Count = 0;
+        consecutiveNotImg3Count = 0;
+        correctCount = 0;
+        wrongCount = 0;
+        btnPlayAgain.classList.remove('show');
+        btnEndGame.classList.remove('show');
+        gameStats.classList.remove('show');
         gameActive = false;
+        document.body.classList.remove('game-active');
       }
 
-      // 结束游戏
-      function endGame() {
-        gameActive = false;
-        if (timer) clearInterval(timer);
-        playable = false;
-        showMessage(`游戏结束！最终得分：${score}分`, 'win');
-        showNotice(`游戏结束！得分：${score}`);
-      }
-
-      // 6. 广告相关逻辑
-      function openAd() {
-        const newTab = window.open(CONFIG.adLink, '_blank');
-        !newTab && showNotice('请允许弹出窗口查看广告');
-        adCloseModal.classList.remove('show');
-      }
-
-      function closeAdWithInsult() {
-        showNotice('放你的屁。');
-        adCloseModal.classList.remove('show');
-        document.querySelector('footer.ad').style.display = 'none';
-      }
-
-      function closeAdWithTaunt() {
-        showNotice('你瞅啥？');
-        adCloseModal.classList.remove('show');
-        document.querySelector('footer.ad').style.display = 'none';
-      }
-
-      // 7. 绑定所有事件（强制触摸优先）
-      // 开始游戏
-      btnStart.ontouchend = (e) => {
-        e.preventDefault();
-        gameActive = true;
-        startRound();
-      };
-      btnStart.onclick = () => {
-        gameActive = true;
-        startRound();
-      };
-
-      // 重置游戏
-      btnRestart.ontouchend = (e) => {
-        e.preventDefault();
-        resetGame();
-      };
-      btnRestart.onclick = resetGame;
-
-      // 结束游戏
-      btnEndGame.ontouchend = (e) => {
-        e.preventDefault();
-        endGame();
-      };
-      btnEndGame.onclick = endGame;
-
-      // 广告关闭按钮
-      adCloseBtn.ontouchend = (e) => {
-        e.preventDefault();
-        adCloseModal.classList.add('show');
-      };
-      adCloseBtn.onclick = () => adCloseModal.classList.add('show');
-
-      // 广告模态框选项
-      btnAdOption1.ontouchend = (e) => {
-        e.preventDefault();
-        openAd();
-      };
-      btnAdOption1.onclick = openAd;
-
-      btnAdOption2.ontouchend = (e) => {
-        e.preventDefault();
-        closeAdWithInsult();
-      };
-      btnAdOption2.onclick = closeAdWithInsult;
-
-      btnAdOption3.ontouchend = (e) => {
-        e.preventDefault();
-        closeAdWithTaunt();
-      };
-      btnAdOption3.onclick = closeAdWithTaunt;
-
-      // 点击模态框背景关闭
-      adCloseModal.ontouchend = (e) => {
-        if (e.target === adCloseModal) adCloseModal.classList.remove('show');
-      };
-      adCloseModal.onclick = (e) => {
-        if (e.target === adCloseModal) adCloseModal.classList.remove('show');
-      };
-
-      // 初始化
-      resetGame();
-    };
-  </script>
-</body>
-</html>
+      function end
