@@ -21,11 +21,24 @@
     .stat{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;text-align:center}
     .controls{display:flex;gap:8px}
     .btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;font-weight:700;cursor:pointer}
-    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent)}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,5,255,255,0.06);color:var(--accent)}
     .message{padding:8px;border-radius:8px;text-align:center;display:none}
     .message.show{display:block}
     .message.win{color:var(--win)}
     .message.lose{color:var(--lose)}
+    /* 修改：极限提示样式 */
+    .message.limit{
+      color:var(--accent);
+      font-size:16px;
+      font-weight:700;
+      animation: pulse 0.5s ease-in-out infinite alternate;
+      background: rgba(255,184,107,0.1);
+      border:1px solid rgba(255,184,107,0.3);
+    }
+    @keyframes pulse{
+      from{transform:scale(1);opacity:0.9}
+      to{transform:scale(1.05);opacity:1}
+    }
     .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:18px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
     .score-notice.show{display:block}
     @keyframes popup{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -86,7 +99,8 @@
       adMedia: "ad-banner.gif",
       adLink: "https://你的推广链接.com",
       timeLimit: 12,
-      maxScore: 100, // 新增：满分设置
+      maxScore: 100, // 满分设置
+      pointsPerCorrect: 5, // 新增：每题答对分数
     };
 
     const QUESTIONS = [
@@ -250,15 +264,17 @@
 
       if(currentQuestion.type==='single'){
         if(originalIndex===currentQuestion.correctOriginalIndex){
-          // 修改：分数不超过满分
+          // 修改：使用统一的加分配置
           if (score < CONFIG.maxScore) {
-            score += 10;
+            score += CONFIG.pointsPerCorrect;
+            // 防止分数超过满分
+            if (score > CONFIG.maxScore) score = CONFIG.maxScore;
             scoreEl.textContent = score;
             checkScoreMilestone();
             setMessage(currentQuestion.onCorrectMsg,'win');
           } else {
-            // 满分后显示极限提示
-            setMessage('已经...极限了♂♂♂','win');
+            // 修改：使用极限提示样式
+            setMessage('已经...极限了♂♂♂','limit');
           }
         } else {
           setMessage(currentQuestion.onWrongMsg,'lose');
@@ -271,15 +287,16 @@
         const res = currentQuestion.onSelect(originalIndex);
         if(res){
           if(res.ok){
-            // 修改：分数不超过满分
+            // 修改：使用统一的加分配置
             if (score < CONFIG.maxScore) {
-              score += 6;
+              score += CONFIG.pointsPerCorrect;
+              if (score > CONFIG.maxScore) score = CONFIG.maxScore;
               scoreEl.textContent = score;
               checkScoreMilestone();
               setMessage(res.msg,'win');
             } else {
-              // 满分后显示极限提示
-              setMessage('已经...极限了♂♂♂','win');
+              // 修改：使用极限提示样式
+              setMessage('已经...极限了♂♂♂','limit');
             }
           }
           else setMessage(res.msg,'lose');
@@ -296,6 +313,8 @@
       messageEl.className = 'message';
       if(type==='win') messageEl.classList.add('win','show');
       else if(type==='lose') messageEl.classList.add('lose','show');
+      // 修改：新增极限提示类型
+      else if(type==='limit') messageEl.classList.add('limit','show');
       if(text) messageEl.textContent = text; else messageEl.textContent = '';
     }
 
