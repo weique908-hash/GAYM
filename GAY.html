@@ -398,6 +398,44 @@
       font-size: 12px;
       color: #ff6347;
     }
+    /* 新增：成就解锁弹窗样式 */
+    .achievement-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 350px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 500;
+      text-align: center;
+      border: 2px solid #ffd700;
+      display: none;
+    }
+    .achievement-modal.show {
+      display: block;
+      animation: popup 0.3s ease-out forwards;
+    }
+    @keyframes popup {
+      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    .achievement-modal-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .achievement-modal-name {
+      font-size: 20px;
+      color: #ffd700;
+      margin-bottom: 8px;
+    }
+    .achievement-modal-desc {
+      font-size: 14px;
+      color: #aaaaaa;
+    }
     .hidden-cls {
       display: none !important;
     }
@@ -438,7 +476,7 @@
       <button class="game-btn btn-secondary" id="resetAchieveBtn">重置成就</button>
     </div>
 
-    <!-- 原有广告区域：显示广告封面GIF -->
+    <!-- 原有广告区域：加入正经衣服图片 -->
     <div class="ad-section" id="originalAd">
       <button class="ad-close-btn" id="originalAdClose">×</button>
       <h3 class="ad-title">快❤️进❤️来❤️</h3>
@@ -493,24 +531,30 @@
     <div id="achievementList"></div>
   </div>
 
+  <!-- 新增：成就解锁弹窗 -->
+  <div class="achievement-modal" id="achievementModal">
+    <div class="achievement-modal-icon">🏆</div>
+    <h3 class="achievement-modal-name" id="modalAchievementName"></h3>
+    <p class="achievement-modal-desc" id="modalAchievementDesc"></p>
+  </div>
+
   <script>
 // ========== 配置项 ==========
     const CONFIG = {
-      // 答题素材：移除帕字图片，仅保留核心角色
+      // 答题素材：移除正经衣服
       answerImages: {
         '酒馆伙计': '酒馆伙计.png',
         '宋': '宋.jpg',
         '朝南': '朝南.jpg',
         'Adams': 'Adams.jpg',
-        '正经衣服': '正经衣服.jpg',
         'img1': 'img1.jpg',
         'img2': 'img2.jpg',
         'img3': 'img3.jpg',
         'img4': 'img4.jpg'
       },
-      // 广告素材：保留帕字图片用于新广告
+      // 广告素材：原有广告加入正经衣服图片
       adMaterials: {
-        original: ['广告.png', '广告2.jpg', '广告3.jpg'],
+        original: ['广告.png', '广告2.jpg', '广告3.jpg', '正经衣服.jpg'],
         new: ['橙帕.jpg', '潮男帕.jpg', '潮男帕的后背.jpg'],
         cover: '广告封面.gif'
       },
@@ -525,29 +569,12 @@
         {id:6,text:'大富哥是哪位？',type:'single-key',correct:'朝南',msgWin:'朝哥请表演一下那个！💰💰💰',msgLose:'不，这位应该不会给你钱。',achievement:'goldCoin'},
         {id:7,text:'你好。请嬷——',type:'single-key',correct:'Adams',msgWin:'“我可是直男呀！”',msgLose:'诶？那也不错。'}
       ],
-      // 恢复所有初始成就 + 隐藏成就标记
-      achievements: {
-        straight: {name:'我是直男',desc:'勇敢承认自己的身份',method:'选择「找出图中的直男」题目中的直男选项'},
-        gayPride: {name:'骄傲之GAY',desc:'为自己的身份感到骄傲',method:'选择「找出图中的直男」题目中的GAY选项'},
-        chef: {name:'你是食材吗',desc:'找到真正的厨师',method:'正确回答「找出真正的厨师」题目'},
-        therapist: {name:'心理治疗师',desc:'找到失去了球棍的心理治疗师',method:'正确回答「找出失去了球棍的心理治疗师」题目'},
-        maxScore: {name:'天选男同🌈',desc:'达到满分100分',method:'在游戏中获得100分'},
-        forgotWho: {name:'好像忘了谁...',desc:'总觉得漏掉了什么重要的人',method:'连续4次不选择img3.jpg图片'},
-        forceful: {name:'强人所难♂',desc:'对某个选项有着执着的偏爱',method:'连续4次选择img1.jpg图片'},
-        omg: {name:'OMG♂',desc:'你发现了隐藏的秘密！',method:'重置成就时选择"yeah♂"选项',hidden: true},
-        pBrother: {name:'P...P弟？',desc:'在「谁没有对象？」问题中选择酒馆伙计',method:'回答「谁没有对象？」问题并选择酒馆伙计'},
-        witheredGrass: {name:'生命为何自称枯草？',desc:'连续5次不选择Adams',method:'答题时连续5次不选Adams图片'},
-        heLovesYou: {name:'他说他爱你。',desc:'朝南题目中选错img4触发',method:'回答「大富哥是哪位？」时选错误选项img4'},
-        goldCoin: {name:'爆点金币？',desc:'第一次选择朝南并答对',method:'首次回答「大富哥是哪位？」时选对朝南'},
-        deepWaterCity: {name:'深水城故事',desc:'正确回答「选出真的不是直男的人」',method:'答对「选出真的不是直男的人」问题'},
-        fashionIcon: {name:'衣品达人❤️',desc:'点开新添加的广告',method:'点击「♂♂火热换装 在线漫画♂♂」广告并查看'},
-        schiller: {name:'Schiller.',desc:'点开原有广告并看到指定图片',method:'点击原有广告且随机到第一张广告图时解锁'}
-      },
-      timeLimit: 10, // 倒计时改为10s
+      timeLimit: 10, // 倒计时10s
       scorePerCorrect: 5,
       maxScore: 100,
       maxAdRepeat: 2, // 广告图片最多重复2次
-      maxQuestionRepeat: 2 // 题目最多连续出现2次
+      maxQuestionRepeat: 2, // 题目最多连续出现2次
+      achievementModalDuration: 2000 // 成就弹窗显示时长
     };
 
     // ========== 全局状态 ==========
@@ -567,11 +594,8 @@
       hasGotPBrother: false,
       unlockedAchievements: new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []),
       triggeredScorePopups: new Set(),
-      // 新增：广告图片计数
       adImgRecord: { original: { lastImg: '', repeatCount: 0 }, new: { lastImg: '', repeatCount: 0 } },
-      // 新增：题目计数
       questionRecord: { lastId: -1, repeatCount: 0 },
-      // 新增：选项位置计数
       positionRecord: { lastPos: -1, repeatCount: 0 }
     };
 
@@ -605,7 +629,11 @@
       resetAchieveYeah: document.getElementById('resetAchieveYeah'),
       achievementWall: document.getElementById('achievementWall'),
       achievementWallClose: document.getElementById('achievementWallClose'),
-      achievementList: document.getElementById('achievementList')
+      achievementList: document.getElementById('achievementList'),
+      // 新增：成就弹窗元素
+      achievementModal: document.getElementById('achievementModal'),
+      modalAchievementName: document.getElementById('modalAchievementName'),
+      modalAchievementDesc: document.getElementById('modalAchievementDesc')
     };
 // ========== 工具函数 ==========
     function handleImageError(img, altText) {
@@ -682,13 +710,26 @@
       return finalOptions;
     }
 
+    // 修改：成就解锁改为弹窗提示
     function unlockAchievement(achievementId) {
       if (gameState.unlockedAchievements.has(achievementId)) return;
       gameState.unlockedAchievements.add(achievementId);
       localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(gameState.unlockedAchievements)));
       renderAchievementWall();
       const achievement = CONFIG.achievements[achievementId];
-      showMessage(`解锁成就：${achievement.name}`, 'win');
+      // 显示成就弹窗
+      showAchievementModal(achievement.name, achievement.desc);
+    }
+
+    // 新增：显示成就弹窗函数
+    function showAchievementModal(name, desc) {
+      el.modalAchievementName.textContent = name;
+      el.modalAchievementDesc.textContent = desc;
+      el.achievementModal.classList.add('show');
+      // 自动关闭弹窗
+      setTimeout(() => {
+        el.achievementModal.classList.remove('show');
+      }, CONFIG.achievementModalDuration);
     }
 
     function showMessage(text, type = 'normal') {
@@ -865,7 +906,7 @@ function handleOptionClick() {
       let isCorrect = false;
       let resultMsg = '';
 
-      // ========== 新增：选项位置计数 ==========
+      // ========== 选项位置计数 ==========
       const posRecord = gameState.positionRecord;
       if (selectedIndex === posRecord.lastPos) {
         posRecord.repeatCount++;
@@ -882,7 +923,7 @@ function handleOptionClick() {
         isCorrect = selectedKey === q.correct;
         resultMsg = isCorrect ? q.msgWin : q.msgLose;
 
-        // ========== 新增：朝南题目选错img4触发成就 ==========
+        // 朝南题目选错img4触发成就
         if (q.id === 6 && selectedKey === 'img4' && !isCorrect) {
           unlockAchievement('heLovesYou');
         }
@@ -895,7 +936,7 @@ function handleOptionClick() {
         resultMsg = res.msg;
       }
 
-      // ========== 新增：满分后仅显示指定文字 ==========
+      // 满分后仅显示指定文字
       if (gameState.score === CONFIG.maxScore) {
         resultMsg = '已经...满了...♂♂♂';
       }
@@ -967,7 +1008,7 @@ function handleOptionClick() {
       showMessage('点击「开始游戏」开始挑战', 'normal');
     }
 
-    // ========== 重置成就逻辑修改：yeah♂不重置 ==========
+    // 重置成就逻辑：yeah♂不重置成就
     function resetAchievements(isYeah) {
       if (!isYeah) {
         gameState.unlockedAchievements.clear();
@@ -998,7 +1039,7 @@ function handleOptionClick() {
       });
     }
 
-    // ========== 广告逻辑修改：图片最多重复2次 ==========
+    // ========== 广告逻辑 ==========
     function bindAdEvents() {
       // 原有广告关闭
       el.originalAdClose.addEventListener('click', () => toggleModal(el.adConfirmModal, true));
