@@ -2,48 +2,49 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
+  <!-- 手机端强制适配：禁止缩放、适配屏幕宽度 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>你好啊我是男同</title>
   <style>
     :root{--bg:#0f1724;--card:#0b1220;--accent:#ffb86b;--muted:#94a3b8;--win:#34d399;--lose:#fb7185;font-family:Inter,system-ui,Arial}
-    html,body{height:100%;margin:0;padding:16px;background:linear-gradient(180deg,var(--bg),#071025);color:#e6eef8;display:flex;align-items:center;justify-content:center}
+    html,body{height:100%;margin:0;padding:12px;background:linear-gradient(180deg,var(--bg),#071025);color:#e6eef8;display:flex;align-items:center;justify-content:center}
     .card{width:100%;max-width:760px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
     header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
     h1{font-size:18px;margin:0}
     .game-area{display:flex;flex-direction:column;gap:12px}
     .board{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
     .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .cell{background:#0c1220;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;pointer-events:auto !important;position:relative;z-index:10}
+    .cell{background:#0c1220;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;min-height:100px;cursor:pointer;pointer-events:auto !important;position:relative;z-index:10}
     .cell img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
     .sidebar{display:flex;flex-direction:row;gap:10px;width:100%}
     .stat{flex:1;background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;text-align:center}
     .stat-label{font-size:12px;color:var(--muted)}
     .stat-value{font-size:18px;font-weight:700}
     .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-    .btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;font-weight:700;cursor:pointer;pointer-events:auto !important;position:relative;z-index:10}
+    .btn{background:var(--accent);border:none;padding:10px 16px;border-radius:8px;font-weight:700;cursor:pointer;pointer-events:auto !important;position:relative;z-index:10;font-size:14px}
     .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent)}
     .btn#btnEndGame{display:none}/* 初始隐藏结束游戏按钮 */
-    .message{padding:8px;border-radius:8px;text-align:center;margin:8px 0;display:none}
+    .message{padding:8px;border-radius:8px;text-align:center;margin:8px 0;display:none;font-size:14px}
     .message.win{color:var(--win);display:block}
     .message.lose{color:var(--lose);display:block}
     .message.limit{color:var(--accent);font-size:16px;font-weight:700;animation:pulse 0.5s ease-in-out infinite alternate;background:rgba(255,184,107,0.1);border:1px solid rgba(255,184,107,0.3);display:block}
     @keyframes pulse{from{transform:scale(1);opacity:0.9}to{transform:scale(1.05);opacity:1}}
-    .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:18px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
+    .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:16px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
     .score-notice.show{display:block}
     @keyframes popup{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
     /* 广告区域 */
     footer.ad{margin-top:12px;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;position:relative}
-    .ad-close-btn{position:absolute;top:6px;right:6px;background:var(--lose);color:white;border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;pointer-events:auto !important}
-    .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none;pointer-events:auto !important}
+    .ad-close-btn{position:absolute;top:6px;right:6px;background:var(--lose);color:white;border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;z-index:10;pointer-events:auto !important}
+    .cta{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none;pointer-events:auto !important;font-size:14px}
     .flash{animation:flash 1s linear infinite}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:0.25}}
-    /* 模态框样式 */
+    /* 模态框样式（手机端适配） */
     .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
     .modal.show{display:flex}
-    .modal-content{background:var(--card);padding:20px;border-radius:12px;width:90%;max-width:400px;border:1px solid rgba(255,255,255,0.05)}
-    .modal-title{font-size:16px;margin:0 0 12px;color:var(--accent);text-align:center}
-    .modal-buttons{display:flex;flex-direction:column;gap:8px}
-    .modal-btn{padding:10px 16px;border-radius:8px;border:none;font-weight:700;cursor:pointer;text-align:center;pointer-events:auto !important;position:relative;z-index:1001}
+    .modal-content{background:var(--card);padding:24px;border-radius:12px;width:85%;max-width:400px;border:1px solid rgba(255,255,255,0.05)}
+    .modal-title{font-size:18px;margin:0 0 16px;color:var(--accent);text-align:center}
+    .modal-buttons{display:flex;flex-direction:column;gap:10px}
+    .modal-btn{padding:12px 16px;border-radius:8px;border:none;font-weight:700;cursor:pointer;text-align:center;pointer-events:auto !important;position:relative;z-index:1001;font-size:14px}
     .modal-btn.option1{background:var(--win);color:#071025}
     .modal-btn.option2{background:var(--lose);color:white}
     .modal-btn.option3{background:var(--accent);color:#071025}
@@ -64,6 +65,7 @@
         </div>
 
         <div id="grid" class="grid"></div>
+="grid"></div>
         <div id="message" class="message"></div>
         <div class="controls">
           <button id="btnStart" class="btn">开始♂游戏</button>
@@ -107,6 +109,7 @@
   <div id="scoreNotice" class="score-notice"></div>
 
   <script>
+    // 手机端优先：等待所有资源加载完成（兼容微信/QQ浏览器）
     window.onload = function() {
       const CONFIG = {
         images: ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg"],
@@ -149,6 +152,7 @@
         }
       ];
 
+      // 获取DOM元素（确保手机端能正确获取）
       const gridEl = document.getElementById('grid');
       const timerEl = document.getElementById('timer');
       const scoreEl = document.getElementById('score');
@@ -165,6 +169,7 @@
       const btnAdOption3 = document.getElementById('btnAdOption3');
       const scoreNoticeEl = document.getElementById('scoreNotice');
 
+      // 游戏状态（手机端避免状态混乱）
       let timeLeft = CONFIG.timeLimit;
       let timer = null;
       let score = 0;
@@ -173,12 +178,14 @@
       let playable = false;
       let gameActive = false;
 
+      // 手机端提示：简化动画，避免卡顿
       function showNotice(text) {
         scoreNoticeEl.textContent = text;
         scoreNoticeEl.classList.add('show');
-        setTimeout(() => scoreNoticeEl.classList.remove('show'), 3000);
+        setTimeout(() => scoreNoticeEl.classList.remove('show'), 2500);
       }
 
+      // 显示游戏消息（适配手机端字体）
       function showMessage(text, type) {
         messageEl.textContent = text;
         messageEl.className = 'message';
@@ -187,6 +194,7 @@
         else if (type === 'limit') messageEl.classList.add('limit');
       }
 
+      // 随机打乱数组（手机端性能优化）
       function shuffleArr(arr) {
         const newArr = [...arr];
         const indexes = Array.from(arr.keys());
@@ -198,6 +206,7 @@
         return { arr: newArr, indexes };
       }
 
+      // 渲染游戏网格（手机端触摸区域优化）
       function renderGrid() {
         gridEl.innerHTML = '';
         const { arr: shuffledImgs, indexes: originalIndexes } = shuffleArr(CONFIG.images);
@@ -209,15 +218,18 @@
           img.src = imgSrc;
           img.alt = `角色${i+1}`;
           cell.appendChild(img);
+          // 手机端优先：触摸事件（防止滚动干扰）
           cell.ontouchend = (e) => {
             e.preventDefault();
             handleCellClick(cell);
           };
+          // 兼容桌面端点击
           cell.onclick = () => handleCellClick(cell);
           gridEl.appendChild(cell);
         });
       }
 
+      // 开始新一轮（手机端倒计时优化）
       function startRound() {
         if (timer) clearInterval(timer);
         timeLeft = CONFIG.timeLimit;
@@ -230,6 +242,7 @@
         playable = true;
         showMessage('', '');
 
+        // 手机端倒计时：避免快速刷新导致卡顿
         timer = setInterval(() => {
           timeLeft--;
           timerEl.textContent = `${timeLeft}s`;
@@ -237,11 +250,13 @@
             clearInterval(timer);
             playable = false;
             showMessage('杂鱼 慢死了', 'lose');
-            setTimeout(() => gameActive && startRound(), 1300);
+            // 手机端延迟：适配触摸响应速度
+            setTimeout(() => gameActive && startRound(), 1000);
           }
         }, 1000);
       }
 
+      // 处理单元格点击（手机端触摸优先）
       function handleCellClick(cell) {
         if (!playable) return;
         playable = false;
@@ -271,10 +286,10 @@
           }
         }
 
-        setTimeout(() => gameActive && startRound(), 1300);
+        setTimeout(() => gameActive && startRound(), 1000);
       }
 
-      // 重置游戏（恢复初始状态）
+      // 重置游戏（手机端恢复初始界面）
       function resetGame() {
         if (timer) clearInterval(timer);
         round = 0;
@@ -289,21 +304,24 @@
         gameActive = false;
       }
 
-      // 结束游戏（完全恢复初始界面）
+      // 结束游戏（手机端逻辑：完全恢复初始状态）
       function endGame() {
         gameActive = false;
         if (timer) clearInterval(timer);
         playable = false;
-        // 直接调用重置函数，恢复所有初始状态
+        // 直接调用重置，确保界面和初始一致
         resetGame();
-        // 显示结束提示（可选，不影响界面一致性）
+        // 手机端提示：简洁明了
         showNotice('游戏已结束');
       }
 
-      // 广告相关逻辑
+      // 广告相关（手机端弹窗优化）
       function openAd() {
+        // 微信/QQ浏览器兼容：尝试打开新窗口
         const newTab = window.open(CONFIG.adLink, '_blank');
-        !newTab && showNotice('请允许弹出窗口查看广告');
+        if (!newTab) {
+          showNotice('请允许弹出窗口查看广告');
+        }
         adCloseModal.classList.remove('show');
       }
 
@@ -319,11 +337,12 @@
         document.querySelector('footer.ad').style.display = 'none';
       }
 
-      // 事件绑定
+      // 手机端事件绑定：触摸优先，避免延迟
+      // 开始游戏
       btnStart.ontouchend = (e) => {
         e.preventDefault();
         gameActive = true;
-        btnEndGame.style.display = 'inline-block'; // 显示结束游戏按钮
+        btnEndGame.style.display = 'inline-block'; // 显示结束按钮
         startRound();
       };
       btnStart.onclick = () => {
@@ -332,24 +351,28 @@
         startRound();
       };
 
+      // 重置游戏
       btnRestart.ontouchend = (e) => {
         e.preventDefault();
         resetGame();
       };
       btnRestart.onclick = resetGame;
 
+      // 结束游戏
       btnEndGame.ontouchend = (e) => {
         e.preventDefault();
         endGame();
       };
       btnEndGame.onclick = endGame;
 
+      // 广告关闭
       adCloseBtn.ontouchend = (e) => {
         e.preventDefault();
         adCloseModal.classList.add('show');
       };
       adCloseBtn.onclick = () => adCloseModal.classList.add('show');
 
+      // 模态框选项
       btnAdOption1.ontouchend = (e) => {
         e.preventDefault();
         openAd();
@@ -368,6 +391,7 @@
       };
       btnAdOption3.onclick = closeAdWithTaunt;
 
+      // 模态框背景关闭（手机端触摸兼容）
       adCloseModal.ontouchend = (e) => {
         if (e.target === adCloseModal) adCloseModal.classList.remove('show');
       };
@@ -375,7 +399,7 @@
         if (e.target === adCloseModal) adCloseModal.classList.remove('show');
       };
 
-      // 初始化（确保界面和开始时一致）
+      // 初始化：确保手机端打开就是初始界面
       resetGame();
     };
   </script>
