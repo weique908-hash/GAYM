@@ -1,0 +1,282 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>你好啊我是男同</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#ffb86b;--muted:#94a3b8;--win:#34d399;--lose:#fb7185;font-family:Inter,system-ui,Arial}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#071025);color:#e6eef8;display:flex;align-items:center;justify-content:center;padding:16px}
+    .card{width:100%;max-width:760px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
+    header{display:flex;align-items:center;justify-content:space-between}
+    h1{font-size:18px;margin:0}
+    p.lead{margin:6px 0 0;font-size:13px;color:var(--muted)}
+    .game-area{display:flex;gap:12px;margin-top:12px}
+    .board{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .cell{background:#0c1220;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:120px}
+    .cell img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+    .sidebar{width:220px;display:flex;flex-direction:column;gap:10px}
+    .stat{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;text-align:center}
+    .controls{display:flex;gap:8px}
+    .btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent)}
+    .message{padding:8px;border-radius:8px;text-align:center;display:none}
+    .message.show{display:block}
+    .message.win{color:var(--win)}
+    .message.lose{color:var(--lose)}
+    footer.ad{margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+    .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none}
+    .flash{animation:flash 1s linear infinite}
+    @keyframes flash{0%,100%{opacity:1}50%{opacity:0.25}}
+    @media (max-width:700px){.game-area{flex-direction:column}.sidebar{width:100%;flex-direction:row}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <div>
+        <h1>你好啊我是男同</h1>
+        <p class="lead">每关是随机题目。请按下面“开始”测试。图片与广告素材请替换为你的文件或外链。</p>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">适合当作互动广告素材</div>
+    </header>
+
+    <div class="game-area">
+      <div class="board">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:13px;color:var(--muted)">关卡：<span id="round">—</span></div>
+          <div id="questionText" style="font-size:13px;color:var(--muted)">题目将随机出现</div>
+        </div>
+
+        <div id="grid" class="grid" aria-label="角色网格"></div>
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="stat"><div style="font-size:12px;color:var(--muted)">倒计时</div><div id="timer" style="font-size:18px;font-weight:700">--</div></div>
+        <div class="stat"><div style="font-size:12px;color:var(--muted)">分数</div><div id="score" style="font-size:18px;font-weight:700">0</div></div>
+        <div class="controls"><button id="btnRestart" class="btn secondary">重置</button><button id="btnStart" class="btn">开始</button></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">提示：点击任一图片选择答案（单选）</div>
+      </aside>
+    </div>
+
+    <footer class="ad">
+      <div style="font-size:13px;color:var(--muted)">广告区（点击可跳转到你的推广页面）</div>
+      <!-- 点击♂这里（我还没调好） 动图占位（请替换 flash.gif 或改为你的视频封面） -->
+      <a id="ctaLink" class="cta" href="#" role="link">
+        <img id="ctaImg" src="flash.gif" alt="点击♂这里（我还没调好）" style="width:36px;height:36px;object-fit:cover;border-radius:6px"> 
+        <span class="flash">点击♂这里（我还没调好）</span>
+      </a>
+    </footer>
+  </div>
+
+  <script>
+    /************************************************************************
+     * 说明（请先阅读）
+     * - 本文件为单文件网页，适合直接保存为 .html 在手机上打开（SPA 不需服务器）。
+     * - 你需要准备 4 张角色图（顺序对应题目中第一、第二、第三、第四张）
+     * - 将图片上传到图床（如 Imgur）或与 HTML 文件放同一目录，然后把 URL/文件名填入 CONFIG.images
+     * - 在 CONFIG.adMedia 填入你的广告图片或 GIF（建议宽高比接近按钮显示区域）
+     * - 我已经把关卡文本和判定逻辑按你的要求实现（见 QUESTIONS）
+     * **************************************************************************/
+
+    const CONFIG = {
+      // 图片：按顺序放 4 张（第 1 张、第 2 张、第 3 张、第 4 张）
+      // 示例占位：替换为你的 URL，如 "https://i.imgur.com/xxxx.jpg" 或本地文件名 "img1.jpg"
+      images: [
+    "/storage/emulated/0/GAY/img1.jpg",
+    "/storage/emulated/0/GAY/img2.jpg",
+    "/storage/emulated/0/GAY/img3.jpg",
+    "/storage/emulated/0/GAY/img4.jpg"
+      ],
+      // 广告素材（图片或 GIF）
+      adMedia: "ad-banner.gif",
+      // 点击广告跳转链接（替换为你自己的推广链接）
+      adLink: "https://你的推广链接.com",
+      timeLimit: 12, // 每关倒计时秒数（手机上建议 8-15 秒）
+    };
+
+    // 题库：按你要求写好的问题、正确答案与提示
+    const QUESTIONS = [
+      {
+        id:1,
+        text: '找出里面所有男同',
+        // 对于题1：无论选谁，都显示“哈哈骗你的，我只设置了单选”
+        type:'special-single',
+        onSelect: function(idx){
+          return {ok:false, msg:'哈哈骗你的，我只设置了单选'};
+        }
+      },
+      {
+        id:2,
+        text: '找出真正的厨师',
+        type:'single',
+        // 正确为第 1 张（索引 0）
+        correct: 0,
+        onCorrectMsg: '你看起来很好吃',
+        onWrongMsg: 'Cazzo，你不认识我吗'
+      },
+      {
+        id:3,
+        text: '找出唯一一个dnd人物',
+        type:'single',
+        // 正确为第 2 张（索引 1）
+        correct: 1,
+        onCorrectMsg: '🎶黑心小蛋糕一枚口牙🍰',
+        onWrongMsg: '哈哈是的这个其实是宗主！'
+      },
+      {
+        id:4,
+        text: '找出失去了球棍的心理治疗师',
+        type:'single',
+        // 正确为第 4 张（索引 3）
+        correct: 3,
+        onCorrectMsg: '隔壁他男人在双持ing',
+        onWrongMsg: '再选错就过来心理治疗'
+      },
+      {
+        id:5,
+        text: '找出图中的直男',
+        type:'single-multi-text',
+        // 选择第1或第2张显示直男文本，否则显示骄傲文本
+        onSelect: function(idx){
+          if(idx===0||idx===1) return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
+          return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
+        }
+      }
+    ];
+
+    /************** 游戏变量（无需修改） **************/
+    let gridEl = document.getElementById('grid');
+    let timerEl = document.getElementById('timer');
+    let scoreEl = document.getElementById('score');
+    let messageEl = document.getElementById('message');
+    let questionTextEl = document.getElementById('questionText');
+    let roundEl = document.getElementById('round');
+    let ctaLink = document.getElementById('ctaLink');
+    let ctaImg = document.getElementById('ctaImg');
+
+    let timeLeft = CONFIG.timeLimit;
+    let timer = null;
+    let score = 0;
+    let round = 0;
+    let currentQuestion = null;
+    let playable = false;
+
+    // 将广告素材和链接填入
+    ctaImg.src = CONFIG.adMedia;
+    ctaLink.href = CONFIG.adLink;
+
+    // 生成本轮界面
+    function renderGrid(){
+      gridEl.innerHTML = '';
+      // 保证 images 数量为 4
+      const imgs = CONFIG.images.slice(0,4);
+      for(let i=0;i<4;i++){
+        const cell = document.createElement('button');
+        cell.className = 'cell';
+        cell.setAttribute('data-index', i);
+        const img = document.createElement('img');
+        img.alt = `角色 ${i+1}`;
+        img.src = imgs[i] || '';
+        cell.appendChild(img);
+        cell.addEventListener('click', onCellClick);
+        gridEl.appendChild(cell);
+      }
+    }
+
+    function startRound(){
+      if(timer) clearInterval(timer);
+      timeLeft = CONFIG.timeLimit;
+      timerEl.textContent = timeLeft + 's';
+      round++;
+      roundEl.textContent = round;
+      // 随机选择题目
+      currentQuestion = QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)];
+      questionTextEl.textContent = currentQuestion.text;
+      renderGrid();
+      playable = true;
+      setMessage('','');
+      timer = setInterval(()=>{
+        timeLeft--;
+        timerEl.textContent = timeLeft + 's';
+        if(timeLeft<=0){
+          clearInterval(timer);
+          playable = false;
+          // 超时处理：如果题是特殊的也要显示对应信息
+          handleTimeout();
+        }
+      },1000);
+    }
+
+    function handleTimeout(){
+      if(!currentQuestion) return;
+      // 对于题1（special-single），超时也显示同样文本
+      if(currentQuestion.type==='special-single'){
+        setMessage('哈哈骗你的，我只设置了单选','lose');
+        return;
+      }
+      setMessage('时间到！下一题即将开始','lose');
+      // 1.3s 后自动下一题
+      setTimeout(()=>{startRound();},1300);
+    }
+
+    function onCellClick(e){
+      if(!playable) return;
+      playable = false;
+      clearInterval(timer);
+      const idx = Number(e.currentTarget.getAttribute('data-index'));
+
+      // 处理不同题型
+      if(currentQuestion.type==='special-single'){
+        setMessage('哈哈骗你的，我只设置了单选','lose');
+        // 自动下一题
+        setTimeout(()=>{startRound();},1200);
+        return;
+      }
+
+      if(currentQuestion.type==='single'){
+        if(idx===currentQuestion.correct){
+          score += 10; scoreEl.textContent = score;
+          setMessage(currentQuestion.onCorrectMsg,'win');
+        } else {
+          setMessage(currentQuestion.onWrongMsg,'lose');
+        }
+        setTimeout(()=>{startRound();},1300);
+        return;
+      }
+
+      if(currentQuestion.type==='single-multi-text'){
+        const res = currentQuestion.onSelect(idx);
+        if(res){
+          if(res.ok){ score += 6; scoreEl.textContent = score; setMessage(res.msg,'win'); }
+          else setMessage(res.msg,'lose');
+        }
+        setTimeout(()=>{startRound();},1300);
+        return;
+      }
+
+      // 默认回退
+      setMessage('发生错误，重试','lose');
+      setTimeout(()=>{startRound();},1200);
+    }
+
+    function setMessage(text, type){
+      messageEl.className = 'message';
+      if(type==='win') messageEl.classList.add('win','show');
+      else if(type==='lose') messageEl.classList.add('lose','show');
+      if(text) messageEl.textContent = text; else messageEl.textContent = '';
+    }
+
+    // 按钮事件
+    document.getElementById('btnStart').addEventListener('click', ()=>{ round=0; score=0; scoreEl.textContent=score; startRound(); });
+    document.getElementById('btnRestart').addEventListener('click', ()=>{ if(timer) clearInterval(timer); round=0; score=0; scoreEl.textContent=score; timeLeft=CONFIG.timeLimit; timerEl.textContent='--'; gridEl.innerHTML=''; setMessage('点击“开始”开始游戏',''); });
+
+    // 初始提示
+    setMessage('点击“开始”开始游戏','');
+
+  </script>
+</body>
+</html>
