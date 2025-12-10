@@ -21,12 +21,13 @@
     .stat{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;text-align:center}
     .controls{display:flex;gap:8px}
     .btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;font-weight:700;cursor:pointer}
-    .btn.secondary{background:transparent;border:1px solid rgba(255,255,5,255,255,0.06);color:var(--accent)}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent)}
+    .btn.game-over{display:none;margin-top:8px;width:100%}
+    .btn.game-over.show{display:block}
     .message{padding:8px;border-radius:8px;text-align:center;display:none}
     .message.show{display:block}
     .message.win{color:var(--win)}
     .message.lose{color:var(--lose)}
-    /* 修改：极限提示样式 */
     .message.limit{
       color:var(--accent);
       font-size:16px;
@@ -46,8 +47,26 @@
     .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none}
     .flash{animation:flash 1s linear infinite}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:0.25}}
-    @media (max-width:700px){.game-area{flex-direction:column}.sidebar{width:100%;flex-direction:row}}
+    /* 成就墙样式 */
+    .achievements{margin-top:12px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .achievements h3{font-size:14px;margin:0 0 8px;color:var(--accent)}
+    .achievement-list{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+    .achievement-item{background:rgba(255,255,255,0.01);padding:6px;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:4px}
+    .achievement-item.locked{color:var(--muted);opacity:0.6}
+    .achievement-item.unlocked{color:var(--win)}
+    .achievement-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+    .achievement-icon.locked::after{content:"🔒"}
+    .achievement-icon.unlocked::after{content:"🏆"}
+    /* 分享按钮样式 */
+    .share-container{margin-top:8px;display:flex;gap:8px}
+    .share-btn{flex:1;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all 0.2s}
+    .share-btn:hover{background:rgba(255,255,255,0.02)}
+    .share-btn i{font-size:14px}
+    .share-btn span{font-size:12px}
+    @media (max-width:700px){.game-area{flex-direction:column}.sidebar{width:100%;flex-direction:row}.achievement-list{grid-template-columns:repeat(3,1fr)}}
   </style>
+  <!-- 引入Font Awesome用于分享图标 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <div class="card">
@@ -68,6 +87,23 @@
 
         <div id="grid" class="grid" aria-label="角色网格"></div>
         <div id="message" class="message" role="status" aria-live="polite"></div>
+        <button id="btnPlayAgain" class="btn game-over">再来一局</button>
+        
+        <!-- 分享按钮 -->
+        <div class="share-container">
+          <button id="btnShareWechat" class="share-btn">
+            <i class="fab fa-weixin" style="color:#07c160"></i>
+            <span>微信</span>
+          </button>
+          <button id="btnShareQQ" class="share-btn">
+            <i class="fab fa-qq" style="color:#12b7f5"></i>
+            <span>QQ</span>
+          </button>
+          <button id="btnShareScreenshot" class="share-btn">
+            <i class="fas fa-share-alt" style="color:var(--accent)"></i>
+            <span>截图</span>
+          </button>
+        </div>
       </div>
 
       <aside class="sidebar">
@@ -76,6 +112,55 @@
         <div class="controls"><button id="btnRestart" class="btn secondary">重置</button><button id="btnStart" class="btn">开始</button></div>
         <div style="font-size:12px;color:var(--muted);margin-top:6px">提示：点击任一图片选择答案（单选）</div>
       </aside>
+    </div>
+
+    <!-- 成就墙 -->
+    <div class="achievements">
+      <h3>成就墙</h3>
+      <div id="achievementList" class="achievement-list">
+        <div class="achievement-item locked" data-id="straight">
+          <div class="achievement-icon locked"></div>
+          <div>
+            <div>我是直男</div>
+            <div style="font-size:10px">选择“直男”选项</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="gayPride">
+          <div class="achievement-icon locked"></div>
+          <div>
+            <div>骄傲之GAY</div>
+            <div style="font-size:10px">选择“GAY”选项</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="chef">
+          <div class="achievement-icon locked"></div>
+          <div>
+            <div>你是食材吗</div>
+            <div style="font-size:10px">正确找出厨师</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="dnd">
+          <div class="achievement-icon locked"></div>
+          <div>
+            <div>黑心小蛋糕</div>
+            <div style="font-size:10px">正确找出DND人物</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="therapist">
+          <div class="achievement-icon locked"></div>
+          <div>
+            <div>心理治疗师</div>
+            <div style="font-size:10px">正确找出心理治疗师</div>
+          </div>
+        </div>
+        <div class="achievement-item locked" data-id="maxScore">
+          <div class="achievement-icon locked"></div>
+          <div>
+            <div>天选男同🌈</div>
+            <div style="font-size:10px">达到满分100分</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <footer class="ad">
@@ -98,9 +183,9 @@
       ],
       adMedia: "ad-banner.gif",
       adLink: "https://你的推广链接.com",
-      timeLimit: 12,
-      maxScore: 100, // 满分设置
-      pointsPerCorrect: 5, // 新增：每题答对分数
+      timeLimit: 8, // 修改：倒计时改为8秒
+      maxScore: 100,
+      pointsPerCorrect: 5,
     };
 
     const QUESTIONS = [
@@ -118,7 +203,8 @@
         type:'single',
         correctOriginalIndex: 0,
         onCorrectMsg: '你看起来很好吃',
-        onWrongMsg: 'Cazzo，你不认识我吗'
+        onWrongMsg: 'Cazzo，你不认识我吗',
+        achievement: 'chef'
       },
       {
         id:3,
@@ -126,7 +212,8 @@
         type:'single',
         correctOriginalIndex: 1,
         onCorrectMsg: '🎶黑心小蛋糕一枚口牙🍰',
-        onWrongMsg: '混蛋 亚当斯要来炸你家了'
+        onWrongMsg: '混蛋 亚当斯要来炸你家了',
+        achievement: 'dnd'
       },
       {
         id:4,
@@ -134,15 +221,21 @@
         type:'single',
         correctOriginalIndex: 3,
         onWrongMsg: '再选错就过来心理治疗',
-        onCorrectMsg: '隔壁他男人在双持ing'
+        onCorrectMsg: '隔壁他男人在双持ing',
+        achievement: 'therapist'
       },
       {
         id:5,
         text: '找出图中的直男',
         type:'single-multi-text',
         onSelect: function(originalIndex){
-          if(originalIndex===0||originalIndex===1) return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
-          return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
+          if(originalIndex===0||originalIndex===1) {
+            unlockAchievement('straight');
+            return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
+          } else {
+            unlockAchievement('gayPride');
+            return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
+          }
         }
       }
     ];
@@ -156,6 +249,11 @@
     let ctaLink = document.getElementById('ctaLink');
     let ctaImg = document.getElementById('ctaImg');
     let scoreNoticeEl = document.getElementById('scoreNotice');
+    let btnPlayAgain = document.getElementById('btnPlayAgain');
+    let achievementList = document.getElementById('achievementList');
+    let btnShareWechat = document.getElementById('btnShareWechat');
+    let btnShareQQ = document.getElementById('btnShareQQ');
+    let btnShareScreenshot = document.getElementById('btnShareScreenshot');
 
     let timeLeft = CONFIG.timeLimit;
     let timer = null;
@@ -165,9 +263,53 @@
     let playable = false;
     let shuffledOriginalIndexes = [];
     let triggeredScoreNotices = new Set();
+    let unlockedAchievements = new Set();
 
     ctaImg.src = CONFIG.adMedia;
     ctaLink.href = CONFIG.adLink;
+
+    // 解锁成就函数
+    function unlockAchievement(achievementId) {
+      if (unlockedAchievements.has(achievementId)) return;
+      
+      unlockedAchievements.add(achievementId);
+      const achievementItem = document.querySelector(`.achievement-item[data-id="${achievementId}"]`);
+      if (achievementItem) {
+        achievementItem.classList.remove('locked');
+        achievementItem.classList.add('unlocked');
+        achievementItem.querySelector('.achievement-icon').classList.remove('locked');
+        achievementItem.querySelector('.achievement-icon').classList.add('unlocked');
+        
+        // 显示成就解锁提示
+        showScoreNotice(`🏆 解锁成就：${achievementItem.querySelector('div:first-of-type').textContent}`);
+      }
+    }
+
+    // 分享功能
+    function shareToWechat() {
+      const shareText = `我在"你好啊我是男同"游戏中获得了${score}分，解锁了${unlockedAchievements.size}个成就！快来挑战我吧！`;
+      // 微信分享需要后端支持，这里用提示代替
+      alert(`微信分享：${shareText}\n\n（实际项目中需要集成微信JS-SDK）`);
+    }
+
+    function shareToQQ() {
+      const shareText = `我在"你好啊我是男同"游戏中获得了${score}分，解锁了${unlockedAchievements.size}个成就！快来挑战我吧！`;
+      // QQ分享
+      window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(window.location.href)}&title=你好啊我是男同&desc=${encodeURIComponent(shareText)}&summary=&site=`, '_blank', 'width=600,height=400');
+    }
+
+    function takeScreenshot() {
+      // 这里使用html2canvas库实现截图（需要引入）
+      alert('截图功能已触发！\n\n（实际项目中需要引入html2canvas库）');
+      // 示例代码（需要引入html2canvas）：
+      // html2canvas(document.body).then(canvas => {
+      //   const imgData = canvas.toDataURL('image/png');
+      //   const link = document.createElement('a');
+      //   link.download = '男同测试截图.png';
+      //   link.href = imgData;
+      //   link.click();
+      // });
+    }
 
     function shuffleArrayWithIndex(array) {
       const newArr = [...array];
@@ -196,6 +338,9 @@
       if (score >= CONFIG.maxScore && !triggeredScoreNotices.has(CONFIG.maxScore)) {
         showScoreNotice('100分！天呐你就是男同之神！');
         triggeredScoreNotices.add(CONFIG.maxScore);
+        unlockAchievement('maxScore'); // 修改：解锁"天选男同🌈"成就
+        // 显示再来一局按钮
+        btnPlayAgain.classList.add('show');
       }
     }
 
@@ -264,16 +409,18 @@
 
       if(currentQuestion.type==='single'){
         if(originalIndex===currentQuestion.correctOriginalIndex){
-          // 修改：使用统一的加分配置
           if (score < CONFIG.maxScore) {
             score += CONFIG.pointsPerCorrect;
-            // 防止分数超过满分
             if (score > CONFIG.maxScore) score = CONFIG.maxScore;
             scoreEl.textContent = score;
             checkScoreMilestone();
             setMessage(currentQuestion.onCorrectMsg,'win');
+            
+            // 解锁对应成就
+            if (currentQuestion.achievement) {
+              unlockAchievement(currentQuestion.achievement);
+            }
           } else {
-            // 修改：使用极限提示样式
             setMessage('已经...极限了♂♂♂','limit');
           }
         } else {
@@ -287,7 +434,6 @@
         const res = currentQuestion.onSelect(originalIndex);
         if(res){
           if(res.ok){
-            // 修改：使用统一的加分配置
             if (score < CONFIG.maxScore) {
               score += CONFIG.pointsPerCorrect;
               if (score > CONFIG.maxScore) score = CONFIG.maxScore;
@@ -295,8 +441,7 @@
               checkScoreMilestone();
               setMessage(res.msg,'win');
             } else {
-              // 修改：使用极限提示样式
-              setMessage('已经...极限了♂♂♂','limit');
+              setMessage('别继续了！已经...极限了♂♂♂','limit');
             }
           }
           else setMessage(res.msg,'lose');
@@ -313,31 +458,40 @@
       messageEl.className = 'message';
       if(type==='win') messageEl.classList.add('win','show');
       else if(type==='lose') messageEl.classList.add('lose','show');
-      // 修改：新增极限提示类型
       else if(type==='limit') messageEl.classList.add('limit','show');
       if(text) messageEl.textContent = text; else messageEl.textContent = '';
     }
 
-    document.getElementById('btnStart').addEventListener('click', ()=>{ 
-      round=0; 
-      score=0; 
-      scoreEl.textContent=score;
+    function resetGame() {
+      if(timer) clearInterval(timer);
+      round = 0;
+      score = 0;
+      scoreEl.textContent = score;
+      timeLeft = CONFIG.timeLimit;
+      timerEl.textContent = '--';
+      gridEl.innerHTML = '';
+      setMessage('点击"开始"开始游戏♂','');
       triggeredScoreNotices.clear();
+      btnPlayAgain.classList.remove('show');
+      // 不重置成就，让玩家可以累积成就
+    }
+
+    document.getElementById('btnStart').addEventListener('click', ()=>{ 
+      resetGame();
       startRound(); 
     });
-    document.getElementById('btnRestart').addEventListener('click', ()=>{ 
-      if(timer) clearInterval(timer); 
-      round=0; 
-      score=0; 
-      scoreEl.textContent=score; 
-      timeLeft=CONFIG.timeLimit; 
-      timerEl.textContent='--'; 
-      gridEl.innerHTML=''; 
-      setMessage('点击“开始”开始游戏','');
-      triggeredScoreNotices.clear();
+    document.getElementById('btnRestart').addEventListener('click', resetGame);
+    document.getElementById('btnPlayAgain').addEventListener('click', ()=>{ 
+      resetGame();
+      startRound(); 
     });
 
-    setMessage('点击“开始”开始游戏','');
+    // 分享按钮事件
+    btnShareWechat.addEventListener('click', shareToWechat);
+    btnShareQQ.addEventListener('click', shareToQQ);
+    btnShareScreenshot.addEventListener('click', takeScreenshot);
+
+    setMessage('点击"开始"开始游戏♂','');
   </script>
 </body>
 </html>
