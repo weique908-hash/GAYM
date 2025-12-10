@@ -26,6 +26,10 @@
     .message.show{display:block}
     .message.win{color:var(--win)}
     .message.lose{color:var(--lose)}
+    /* 新增分数提示样式 */
+    .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:18px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
+    .score-notice.show{display:block}
+    @keyframes popup{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
     footer.ad{margin-top:12px;display:flex;justify-content:space-between;align-items:center}
     .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--accent);color:#071025;font-weight:700;text-decoration:none}
     .flash{animation:flash 1s linear infinite}
@@ -70,6 +74,8 @@
       </a>
     </footer>
   </div>
+  <!-- 新增分数提示弹窗 -->
+  <div id="scoreNotice" class="score-notice"></div>
 
   <script>
     const CONFIG = {
@@ -97,7 +103,6 @@
         id:2,
         text: '找出真正的厨师',
         type:'single',
-        // 改为原始图片索引（不是视觉位置）
         correctOriginalIndex: 0,
         onCorrectMsg: '你看起来很好吃',
         onWrongMsg: 'Cazzo，你不认识我吗'
@@ -108,7 +113,7 @@
         type:'single',
         correctOriginalIndex: 1,
         onCorrectMsg: '🎶黑心小蛋糕一枚口牙🍰',
-        onWrongMsg: '哈哈是的这个其实是宗主！'
+        onWrongMsg: '混蛋 认不出朝北的话亚当斯会来炸你家的'
       },
       {
         id:4,
@@ -122,7 +127,6 @@
         id:5,
         text: '找出图中的直男',
         type:'single-multi-text',
-        // 改为匹配原始索引
         onSelect: function(originalIndex){
           if(originalIndex===0||originalIndex===1) return {ok:true, msg:'💞我们是真正的♂直男♂呀'};
           return {ok:true, msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};
@@ -138,6 +142,8 @@
     let roundEl = document.getElementById('round');
     let ctaLink = document.getElementById('ctaLink');
     let ctaImg = document.getElementById('ctaImg');
+    // 新增分数提示元素
+    let scoreNoticeEl = document.getElementById('scoreNotice');
 
     let timeLeft = CONFIG.timeLimit;
     let timer = null;
@@ -145,13 +151,13 @@
     let round = 0;
     let currentQuestion = null;
     let playable = false;
-    // 存储本轮随机后的图片原始索引映射
     let shuffledOriginalIndexes = [];
+    // 记录已触发的分数提示，避免重复弹出
+    let triggeredScoreNotices = new Set();
 
     ctaImg.src = CONFIG.adMedia;
     ctaLink.href = CONFIG.adLink;
 
-    // 数组随机排序（返回排序后的数组和原始索引映射）
     function shuffleArrayWithIndex(array) {
       const newArr = [...array];
       const originalIndexes = Array.from(array.keys());
@@ -163,16 +169,35 @@
       return { shuffledArr: newArr, originalIndexes: originalIndexes };
     }
 
+    // 新增：分数提示弹窗函数
+    function showScoreNotice(text) {
+      scoreNoticeEl.textContent = text;
+      scoreNoticeEl.classList.add('show');
+      // 3秒后隐藏弹窗
+      setTimeout(() => {
+        scoreNoticeEl.classList.remove('show');
+      }, 3000);
+    }
+
+    // 新增：分数检查函数
+    function checkScoreMilestone() {
+      if (score === 50 && !triggeredScoreNotices.has(50)) {
+        showScoreNotice('太棒了！50分！❤️');
+        triggeredScoreNotices.add(50);
+      } else if (score === 100 && !triggeredScoreNotices.has(100)) {
+        showScoreNotice('100分！天呐你就是男同之神！🌈');
+        triggeredScoreNotices.add(100);
+      }
+    }
+
     function renderGrid(){
       gridEl.innerHTML = '';
       const imgs = CONFIG.images.slice(0,4);
-      // 随机排序并获取原始索引映射
       const { shuffledArr, originalIndexes } = shuffleArrayWithIndex(imgs);
       shuffledOriginalIndexes = originalIndexes;
       for(let i=0;i<4;i++){
         const cell = document.createElement('button');
         cell.className = 'cell';
-        // 存储视觉索引（用于点击获取）
         cell.setAttribute('data-visual-index', i);
         const img = document.createElement('img');
         img.alt = `角色 ${i+1}`;
@@ -211,7 +236,7 @@
         setMessage('哈哈骗你的，我只设置了单选','lose');
         return;
       }
-      setMessage('时间到！下一题即将开始','lose');
+      setMessage('哈哈哈你好慢','lose');
       setTimeout(()=>{startRound();},1300);
     }
 
@@ -219,9 +244,7 @@
       if(!playable) return;
       playable = false;
       clearInterval(timer);
-      // 获取点击的视觉索引
       const visualIndex = Number(e.currentTarget.getAttribute('data-visual-index'));
-      // 通过视觉索引获取原始索引
       const originalIndex = shuffledOriginalIndexes[visualIndex];
 
       if(currentQuestion.type==='special-single'){
@@ -231,9 +254,11 @@
       }
 
       if(currentQuestion.type==='single'){
-        // 匹配原始索引判定正确答案
         if(originalIndex===currentQuestion.correctOriginalIndex){
-          score += 10; scoreEl.textContent = score;
+          score += 10; 
+          scoreEl.textContent = score;
+          // 新增：更新分数后检查里程碑
+          checkScoreMilestone();
           setMessage(currentQuestion.onCorrectMsg,'win');
         } else {
           setMessage(currentQuestion.onWrongMsg,'lose');
@@ -245,7 +270,13 @@
       if(currentQuestion.type==='single-multi-text'){
         const res = currentQuestion.onSelect(originalIndex);
         if(res){
-          if(res.ok){ score += 6; scoreEl.textContent = score; setMessage(res.msg,'win'); }
+          if(res.ok){ 
+            score += 6; 
+            scoreEl.textContent = score;
+            // 新增：更新分数后检查里程碑
+            checkScoreMilestone();
+            setMessage(res.msg,'win'); 
+          }
           else setMessage(res.msg,'lose');
         }
         setTimeout(()=>{startRound();},1300);
@@ -263,10 +294,28 @@
       if(text) messageEl.textContent = text; else messageEl.textContent = '';
     }
 
-    document.getElementById('btnStart').addEventListener('click', ()=>{ round=0; score=0; scoreEl.textContent=score; startRound(); });
-    document.getElementById('btnRestart').addEventListener('click', ()=>{ if(timer) clearInterval(timer); round=0; score=0; scoreEl.textContent=score; timeLeft=CONFIG.timeLimit; timerEl.textContent='--'; gridEl.innerHTML=''; setMessage('点击“开始”开始游戏',''); });
+    document.getElementById('btnStart').addEventListener('click', ()=>{ 
+      round=0; 
+      score=0; 
+      scoreEl.textContent=score;
+      // 重置分数提示记录
+      triggeredScoreNotices.clear();
+      startRound(); 
+    });
+    document.getElementById('btnRestart').addEventListener('click', ()=>{ 
+      if(timer) clearInterval(timer); 
+      round=0; 
+      score=0; 
+      scoreEl.textContent=score; 
+      timeLeft=CONFIG.timeLimit; 
+      timerEl.textContent='--'; 
+      gridEl.innerHTML=''; 
+      setMessage('点击“开始”开始游戏♂','');
+      // 重置分数提示记录
+      triggeredScoreNotices.clear();
+    });
 
-    setMessage('点击“开始”开始游戏','');
+    setMessage('点击“开始”开始游戏♂','');
   </script>
 </body>
 </html>
