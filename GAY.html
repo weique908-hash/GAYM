@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <!-- 手机端强制适配：禁止缩放、适配屏幕宽度 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>你好啊我是男同</title>
   <style>
@@ -29,9 +28,25 @@
     .message.lose{color:var(--lose);display:block}
     .message.limit{color:var(--accent);font-size:16px;font-weight:700;animation:pulse 0.5s ease-in-out infinite alternate;background:rgba(255,184,107,0.1);border:1px solid rgba(255,184,107,0.3);display:block}
     @keyframes pulse{from{transform:scale(1);opacity:0.9}to{transform:scale(1.05);opacity:1}}
-    .score-notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,23,36,0.95);border:2px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:16px;font-weight:700;color:var(--accent);z-index:999;animation:popup 0.3s ease-in-out;display:none}
-    .score-notice.show{display:block}
-    @keyframes popup{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+    /* 通用弹窗样式（手机端适配） */
+    .popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card);border-radius:12px;padding:24px;border:2px solid var(--accent);z-index:1000;animation:popup 0.3s ease-in-out;display:none;width:85%;max-width:350px;text-align:center}
+    .popup.show{display:block}
+    @keyframes popup{0%{opacity:0;transform:translate(-50%,-60%) scale(0.9)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    /* 分数里程碑弹窗 */
+    .score-popup .popup-icon{font-size:32px;margin-bottom:12px;color:var(--accent)}
+    .score-popup h3{font-size:20px;margin:0 0 8px;color:var(--accent)}
+    .score-popup p{font-size:14px;margin:0 0 16px;color:var(--muted)}
+    /* 成就解锁弹窗 */
+    .achievement-popup{padding:20px}
+    .achievement-popup .popup-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .achievement-popup .achievement-icon{width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;color:#071025}
+    .achievement-popup .achievement-info{text-align:left}
+    .achievement-popup h3{font-size:18px;margin:0 0 4px;color:var(--win)}
+    .achievement-popup p{font-size:12px;margin:0;color:var(--muted)}
+    .achievement-popup .popup-body{font-size:14px;margin-bottom:16px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.01)}
+    /* 遮罩层 */
+    .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none}
+    .overlay.show{display:block}
     /* 广告区域 */
     footer.ad{margin-top:12px;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;position:relative}
     .ad-close-btn{position:absolute;top:6px;right:6px;background:var(--lose);color:white;border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;z-index:10;pointer-events:auto !important}
@@ -65,7 +80,6 @@
         </div>
 
         <div id="grid" class="grid"></div>
-="grid"></div>
         <div id="message" class="message"></div>
         <div class="controls">
           <button id="btnStart" class="btn">开始♂游戏</button>
@@ -106,53 +120,112 @@
     </div>
   </div>
 
-  <div id="scoreNotice" class="score-notice"></div>
+  <!-- 弹窗相关 -->
+  <div class="overlay" id="overlay"></div>
+  <!-- 分数里程碑弹窗（50分/100分） -->
+  <div class="popup score-popup" id="scorePopup">
+    <div class="popup-icon" id="scorePopupIcon">🎉</div>
+    <h3 id="scorePopupTitle">太棒了！</h3>
+    <p id="scorePopupDesc">你已经获得了50分！</p>
+    <button class="btn" id="scorePopupBtn">继续挑战</button>
+  </div>
+  <!-- 成就解锁弹窗 -->
+  <div class="popup achievement-popup" id="achievementPopup">
+    <div class="popup-header">
+      <div class="achievement-icon">🏆</div>
+      <div class="achievement-info">
+        <h3 id="achievementName">成就解锁！</h3>
+        <p id="achievementDesc">完成了某个成就</p>
+      </div>
+    </div>
+    <div class="popup-body" id="achievementMsg">
+      恭喜你解锁了新成就！
+    </div>
+    <button class="btn" id="achievementPopupBtn">太棒了</button>
+  </div>
 
   <script>
-    // 手机端优先：等待所有资源加载完成（兼容微信/QQ浏览器）
     window.onload = function() {
       const CONFIG = {
         images: ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg"],
         adLink: "https://你的推广链接.com",
         timeLimit: 8,
         maxScore: 100,
-        pointsPerCorrect: 5
+        pointsPerCorrect: 5,
       };
 
+      // 题目配置（新增成就关联）
       const QUESTIONS = [
         {
+          id:1,
           text: '找出里面所有男同',
-          type: 'special',
+          type:'special',
           onSelect: () => ({ ok: false, msg: '哈哈骗你的，我只设置了单选' })
         },
         {
+          id:2,
           text: '找出真正的厨师',
-          type: 'single',
+          type:'single',
           correctIdx: 0,
           onCorrect: '你看起来很好吃',
-          onWrong: 'Cazzo，你不认识我吗'
+          onWrong: 'Cazzo，你不认识我吗',
+          achievement: 'chef' // 关联成就：厨师
         },
         {
+          id:3,
           text: '找出失去了球棍的心理治疗师',
-          type: 'single',
+          type:'single',
           correctIdx: 3,
           onCorrect: '隔壁他男人在双持ing',
-          onWrong: '再选错就过来心理治疗'
+          onWrong: '再选错就过来心理治疗',
+          achievement: 'therapist' // 关联成就：心理治疗师
         },
         {
+          id:4,
           text: '找出图中的直男',
-          type: 'multi-text',
+          type:'multi-text',
           onSelect: (idx) => {
-            if (idx === 0 || idx === 1) {
+            if(idx === 0 || idx === 1) {
+              unlockAchievement('straight'); // 解锁成就：直男
               return { ok: true, msg: '💞我们是真正的♂直男♂呀' };
             } else {
+              unlockAchievement('gayPride'); // 解锁成就：骄傲之GAY
               return { ok: true, msg: '🌈🌈🌈骄傲之♂GAY🌈🌈🌈' };
             }
           }
         }
       ];
 
-      // 获取DOM元素（确保手机端能正确获取）
+      // 成就配置（新增成就描述）
+      const ACHIEVEMENTS = {
+        straight: {
+          name: '我是直男',
+          desc: '选择"直男"选项',
+          msg: '💞 你选择了直男选项，果然是纯纯的♂直男！'
+        },
+        gayPride: {
+          name: '骄傲之GAY',
+          desc: '选择"GAY"选项',
+          msg: '🌈 骄傲的GAY！为你感到自豪！'
+        },
+        chef: {
+          name: '你是食材吗',
+          desc: '正确找出厨师',
+          msg: '👨‍🍳 你找出了真正的厨师，小心被做成美食哦！'
+        },
+        therapist: {
+          name: '心理治疗师',
+          desc: '正确找出心理治疗师',
+          msg: '🧠 找到心理治疗师了！需要聊聊你的感情问题吗？'
+        },
+        maxScore: {
+          name: '天选男同🌈',
+          desc: '达到满分100分',
+          msg: '🏆 满分！你就是天选之子，男同之神！'
+        }
+      };
+
+      // DOM元素获取（新增弹窗元素）
       const gridEl = document.getElementById('grid');
       const timerEl = document.getElementById('timer');
       const scoreEl = document.getElementById('score');
@@ -167,9 +240,20 @@
       const btnAdOption1 = document.getElementById('btnAdOption1');
       const btnAdOption2 = document.getElementById('btnAdOption2');
       const btnAdOption3 = document.getElementById('btnAdOption3');
-      const scoreNoticeEl = document.getElementById('scoreNotice');
+      // 弹窗元素
+      const overlay = document.getElementById('overlay');
+      const scorePopup = document.getElementById('scorePopup');
+      const scorePopupIcon = document.getElementById('scorePopupIcon');
+      const scorePopupTitle = document.getElementById('scorePopupTitle');
+      const scorePopupDesc = document.getElementById('scorePopupDesc');
+      const scorePopupBtn = document.getElementById('scorePopupBtn');
+      const achievementPopup = document.getElementById('achievementPopup');
+      const achievementName = document.getElementById('achievementName');
+      const achievementDesc = document.getElementById('achievementDesc');
+      const achievementMsg = document.getElementById('achievementMsg');
+      const achievementPopupBtn = document.getElementById('achievementPopupBtn');
 
-      // 游戏状态（手机端避免状态混乱）
+      // 游戏状态（新增成就相关状态）
       let timeLeft = CONFIG.timeLimit;
       let timer = null;
       let score = 0;
@@ -177,24 +261,58 @@
       let currentQuestion = null;
       let playable = false;
       let gameActive = false;
+      let unlockedAchievements = new Set(); // 已解锁成就集合
+      let triggeredScorePopups = new Set(); // 已触发的分数弹窗集合
 
-      // 手机端提示：简化动画，避免卡顿
-      function showNotice(text) {
-        scoreNoticeEl.textContent = text;
-        scoreNoticeEl.classList.add('show');
-        setTimeout(() => scoreNoticeEl.classList.remove('show'), 2500);
+      // 显示通用弹窗（遮罩+弹窗联动）
+      function showPopup(popupEl) {
+        overlay.classList.add('show');
+        popupEl.classList.add('show');
+        // 手机端：弹窗显示时禁止背景滚动
+        document.body.style.overflow = 'hidden';
       }
 
-      // 显示游戏消息（适配手机端字体）
-      function showMessage(text, type) {
-        messageEl.textContent = text;
-        messageEl.className = 'message';
-        if (type === 'win') messageEl.classList.add('win');
-        else if (type === 'lose') messageEl.classList.add('lose');
-        else if (type === 'limit') messageEl.classList.add('limit');
+      // 关闭通用弹窗
+      function closePopup(popupEl) {
+        overlay.classList.remove('show');
+        popupEl.classList.remove('show');
+        document.body.style.overflow = 'auto';
       }
 
-      // 随机打乱数组（手机端性能优化）
+      // 显示分数里程碑弹窗（50分/100分）
+      function showScorePopup(score) {
+        if (triggeredScorePopups.has(score)) return; // 避免重复触发
+        triggeredScorePopups.add(score);
+
+        if (score === 50) {
+          scorePopupIcon.textContent = '🎉';
+          scorePopupTitle.textContent = '太棒了！';
+          scorePopupDesc.textContent = '你已经获得了50分！离满分不远了！';
+        } else if (score === CONFIG.maxScore) {
+          scorePopupIcon.textContent = '🏆';
+          scorePopupTitle.textContent = '满分！';
+          scorePopupDesc.textContent = '你获得了100分！天选男同非你莫属！';
+          unlockAchievement('maxScore'); // 100分解锁成就
+        }
+
+        showPopup(scorePopup);
+      }
+
+      // 解锁成就并显示弹窗
+      function unlockAchievement(achievementId) {
+        if (unlockedAchievements.has(achievementId)) return; // 避免重复解锁
+        unlockedAchievements.add(achievementId);
+
+        const achievement = ACHIEVEMENTS[achievementId];
+        if (achievement) {
+          achievementName.textContent = achievement.name;
+          achievementDesc.textContent = achievement.desc;
+          achievementMsg.textContent = achievement.msg;
+          showPopup(achievementPopup);
+        }
+      }
+
+      // 随机打乱数组
       function shuffleArr(arr) {
         const newArr = [...arr];
         const indexes = Array.from(arr.keys());
@@ -206,7 +324,7 @@
         return { arr: newArr, indexes };
       }
 
-      // 渲染游戏网格（手机端触摸区域优化）
+      // 渲染游戏网格
       function renderGrid() {
         gridEl.innerHTML = '';
         const { arr: shuffledImgs, indexes: originalIndexes } = shuffleArr(CONFIG.images);
@@ -218,18 +336,17 @@
           img.src = imgSrc;
           img.alt = `角色${i+1}`;
           cell.appendChild(img);
-          // 手机端优先：触摸事件（防止滚动干扰）
+          // 手机端触摸优先
           cell.ontouchend = (e) => {
             e.preventDefault();
             handleCellClick(cell);
           };
-          // 兼容桌面端点击
           cell.onclick = () => handleCellClick(cell);
           gridEl.appendChild(cell);
         });
       }
 
-      // 开始新一轮（手机端倒计时优化）
+      // 开始新一轮
       function startRound() {
         if (timer) clearInterval(timer);
         timeLeft = CONFIG.timeLimit;
@@ -242,7 +359,6 @@
         playable = true;
         showMessage('', '');
 
-        // 手机端倒计时：避免快速刷新导致卡顿
         timer = setInterval(() => {
           timeLeft--;
           timerEl.textContent = `${timeLeft}s`;
@@ -250,13 +366,12 @@
             clearInterval(timer);
             playable = false;
             showMessage('杂鱼 慢死了', 'lose');
-            // 手机端延迟：适配触摸响应速度
             setTimeout(() => gameActive && startRound(), 1000);
           }
         }, 1000);
       }
 
-      // 处理单元格点击（手机端触摸优先）
+      // 处理单元格点击
       function handleCellClick(cell) {
         if (!playable) return;
         playable = false;
@@ -268,9 +383,17 @@
           if (originalIdx === currentQuestion.correctIdx) {
             if (score < CONFIG.maxScore) {
               score += CONFIG.pointsPerCorrect;
+              if (score > CONFIG.maxScore) score = CONFIG.maxScore;
               scoreEl.textContent = score;
               showMessage(currentQuestion.onCorrect, 'win');
-              showNotice(`+${CONFIG.pointsPerCorrect}分`);
+              // 检查分数里程碑
+              if (score === 50 || score === CONFIG.maxScore) {
+                showScorePopup(score);
+              }
+              // 检查成就解锁
+              if (currentQuestion.achievement) {
+                unlockAchievement(currentQuestion.achievement);
+              }
             } else {
               showMessage('已经...极限了♂♂♂', 'limit');
             }
@@ -281,15 +404,31 @@
           res.ok ? showMessage(res.msg, 'win') : showMessage(res.msg, 'lose');
           if (res.ok && score < CONFIG.maxScore) {
             score += CONFIG.pointsPerCorrect;
+            if (score > CONFIG.maxScore) score = CONFIG.maxScore;
             scoreEl.textContent = score;
-            showNotice(`+${CONFIG.pointsPerCorrect}分`);
+            // 检查分数里程碑
+            if (score === 50 || score === CONFIG.maxScore) {
+              showScorePopup(score);
+            }
           }
         }
 
-        setTimeout(() => gameActive && startRound(), 1000);
+        // 弹窗显示时不自动进入下一轮，关闭弹窗后再继续
+        if (!scorePopup.classList.contains('show') && !achievementPopup.classList.contains('show')) {
+          setTimeout(() => gameActive && startRound(), 1000);
+        }
       }
 
-      // 重置游戏（手机端恢复初始界面）
+      // 显示游戏消息
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message';
+        if (type === 'win') messageEl.classList.add('win');
+        else if (type === 'lose') messageEl.classList.add('lose');
+        else if (type === 'limit') messageEl.classList.add('limit');
+      }
+
+      // 重置游戏
       function resetGame() {
         if (timer) clearInterval(timer);
         round = 0;
@@ -300,49 +439,46 @@
         roundEl.textContent = '—';
         gridEl.innerHTML = '';
         showMessage('点击"开始♂游戏"开始挑战', '');
-        btnEndGame.style.display = 'none'; // 隐藏结束游戏按钮
+        btnEndGame.style.display = 'none';
         gameActive = false;
+        // 重置弹窗触发状态
+        triggeredScorePopups.clear();
       }
 
-      // 结束游戏（手机端逻辑：完全恢复初始状态）
+      // 结束游戏
       function endGame() {
         gameActive = false;
         if (timer) clearInterval(timer);
         playable = false;
-        // 直接调用重置，确保界面和初始一致
         resetGame();
-        // 手机端提示：简洁明了
-        showNotice('游戏已结束');
+        showMessage('游戏已结束', 'win');
       }
 
-      // 广告相关（手机端弹窗优化）
+      // 广告相关逻辑
       function openAd() {
-        // 微信/QQ浏览器兼容：尝试打开新窗口
         const newTab = window.open(CONFIG.adLink, '_blank');
-        if (!newTab) {
-          showNotice('请允许弹出窗口查看广告');
-        }
+        !newTab && showMessage('请允许弹出窗口查看广告', 'lose');
         adCloseModal.classList.remove('show');
       }
 
       function closeAdWithInsult() {
-        showNotice('放你的屁。');
+        showMessage('放你的屁。', 'lose');
         adCloseModal.classList.remove('show');
         document.querySelector('footer.ad').style.display = 'none';
       }
 
       function closeAdWithTaunt() {
-        showNotice('你瞅啥？');
+        showMessage('你瞅啥？', 'lose');
         adCloseModal.classList.remove('show');
         document.querySelector('footer.ad').style.display = 'none';
       }
 
-      // 手机端事件绑定：触摸优先，避免延迟
+      // 事件绑定（新增弹窗按钮事件）
       // 开始游戏
       btnStart.ontouchend = (e) => {
         e.preventDefault();
         gameActive = true;
-        btnEndGame.style.display = 'inline-block'; // 显示结束按钮
+        btnEndGame.style.display = 'inline-block';
         startRound();
       };
       btnStart.onclick = () => {
@@ -391,7 +527,38 @@
       };
       btnAdOption3.onclick = closeAdWithTaunt;
 
-      // 模态框背景关闭（手机端触摸兼容）
+      // 弹窗按钮
+      scorePopupBtn.ontouchend = (e) => {
+        e.preventDefault();
+        closePopup(scorePopup);
+        // 关闭弹窗后继续下一轮
+        if (gameActive) {
+          setTimeout(() => startRound(), 300);
+        }
+      };
+      scorePopupBtn.onclick = () => {
+        closePopup(scorePopup);
+        if (gameActive) {
+          setTimeout(() => startRound(), 300);
+        }
+      };
+
+      achievementPopupBtn.ontouchend = (e) => {
+        e.preventDefault();
+        closePopup(achievementPopup);
+        // 关闭弹窗后继续下一轮
+        if (gameActive) {
+          setTimeout(() => startRound(), 300);
+        }
+      };
+      achievementPopupBtn.onclick = () => {
+        closePopup(achievementPopup);
+        if (gameActive) {
+          setTimeout(() => startRound(), 300);
+        }
+      };
+
+      // 模态框背景关闭
       adCloseModal.ontouchend = (e) => {
         if (e.target === adCloseModal) adCloseModal.classList.remove('show');
       };
@@ -399,7 +566,7 @@
         if (e.target === adCloseModal) adCloseModal.classList.remove('show');
       };
 
-      // 初始化：确保手机端打开就是初始界面
+      // 初始化
       resetGame();
     };
   </script>
