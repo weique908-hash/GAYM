@@ -23,6 +23,29 @@
       overflow-x: hidden;
       -webkit-tap-highlight-color: transparent;
       opacity: 1 !important;
+      position: relative;
+    }
+    /* 顶部成就弹窗样式 */
+    .achievement-popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #121212;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      z-index: 9999;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .achievement-popup.show {
+      display: block;
+      opacity: 1;
     }
     .game-container {
       max-width: 500px;
@@ -156,7 +179,7 @@
     .game-btn:active {
       opacity: 0.8;
     }
-    /* 成就解锁弹窗更醒目 */
+    /* 答题结果弹窗样式 */
     .message-box {
       padding: 16px 12px;
       border-radius: 12px;
@@ -407,6 +430,9 @@
   </style>
 </head>
 <body>
+  <!-- 顶部成就弹窗 -->
+  <div class="achievement-popup" id="achievementPopup"></div>
+
   <!-- 游戏主容器 -->
   <div class="game-container">
     <div class="game-header">
@@ -606,7 +632,8 @@
       resetAchieveYeah: document.getElementById('resetAchieveYeah'),
       achievementWall: document.getElementById('achievementWall'),
       achievementWallClose: document.getElementById('achievementWallClose'),
-      achievementList: document.getElementById('achievementList')
+      achievementList: document.getElementById('achievementList'),
+      achievementPopup: document.getElementById('achievementPopup') // 新增成就弹窗引用
     };
 // ========== 工具函数 ==========
     function handleImageError(img, altText) {
@@ -640,7 +667,16 @@
       return finalOptions;
     }
 
-    // 修改成就解锁弹窗：更醒目+带emoji
+    // 新增：顶部成就弹窗显示函数
+    function showAchievementPopup(text) {
+      el.achievementPopup.textContent = text;
+      el.achievementPopup.classList.add('show');
+      setTimeout(() => {
+        el.achievementPopup.classList.remove('show');
+      }, 3000);
+    }
+
+    // 修改解锁成就函数：使用顶部弹窗，不占用答题结果框
     function unlockAchievement(achievementId) {
       if (gameState.unlockedAchievements.has(achievementId)) return;
       gameState.unlockedAchievements.add(achievementId);
@@ -652,13 +688,14 @@
       if(achievement.hidden) emoji = '🔮';
       if(achievementId === 'noWork') emoji = '😴';
       if(achievementId === 'thisIsAlso') emoji = '✨';
-      showMessage(`${emoji} 解锁成就：${achievement.name} ${emoji}`, 'win');
+      // 顶部弹窗展示成就
+      showAchievementPopup(`${emoji} 解锁成就：${achievement.name} ${emoji}`);
     }
 
     function showMessage(text, type = 'normal') {
       el.messageBox.textContent = text;
       el.messageBox.className = `message-box msg-${type}`;
-      // 弹窗闪烁效果
+      // 答题弹窗闪烁效果
       el.messageBox.style.animation = 'none';
       setTimeout(() => {
         el.messageBox.style.animation = 'breath 1s infinite ease-in-out';
@@ -794,7 +831,7 @@
         el.timerNum.textContent = `${gameState.timeLeft}s`;
         if (gameState.timeLeft <= 0) {
           clearInterval(gameState.timer);
-          showMessage('杂鱼 慢死了∠( ᐛ 」∠)_', 'lose');
+          showMessage('⏰ 时间到！回答错误 ⏰', 'lose');
           gameState.wrongCount++;
           gameState.consecutiveImg1Count = 0;
           gameState.consecutiveNotImg3Count = 0;
@@ -948,7 +985,7 @@ function handleOptionClick() {
       showMessage(isYeah ? '🔮 成就已重置！解锁隐藏成就 🔮' : '🔄 成就已重置', 'normal');
     }
 
-    // 修改成就墙渲染：隐藏成就未获得时标题显示？？？
+    // 成就墙渲染：隐藏成就未获得时标题显示？？？
     function renderAchievementWall() {
       el.achievementList.innerHTML = '';
       Object.entries(CONFIG.achievements).forEach(([id, achievement]) => {
