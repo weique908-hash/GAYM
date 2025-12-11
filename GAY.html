@@ -920,87 +920,91 @@
       });
     }
 function handleOptionClick() {
-      if (!gameState.isPlaying) return;
-      clearInterval(gameState.timer);
-      gameState.isPlaying = false;
+  if (!gameState.isPlaying) return;
+  clearInterval(gameState.timer);
+  gameState.isPlaying = false;
 
-      const selectedKey = this.dataset.key;
-      const selectedIndex = Number(this.dataset.index);
-      const q = gameState.currentQuestion;
-      let isCorrect = false;
-      let resultMsg = '';
+  const selectedKey = this.dataset.key;
+  const selectedIndex = Number(this.dataset.index);
+  const q = gameState.currentQuestion;
+  let isCorrect = false;
+  let resultMsg = '';
 
-      // ========== 新增：选项位置计数 ==========
-      const posRecord = gameState.positionRecord;
-      if (selectedIndex === posRecord.lastPos) {
-        posRecord.repeatCount++;
-        if (posRecord.repeatCount > 10) {
-          showMessage('不许戳了！！！', 'normal');
-        }
-      } else {
-        posRecord.lastPos = selectedIndex;
-        posRecord.repeatCount = 1;
-      }
-
-      // ========== 原有答题逻辑 ==========
-      if (q.type === 'single-key') {
-        isCorrect = selectedKey === q.correct;
-        resultMsg = isCorrect ? q.msgWin : q.msgLose;
-
-        // ========== 新增：朝南题目选错img4触发成就 ==========
-        if (q.id === 6 && selectedKey === 'img4' && !isCorrect) {
-          unlockAchievement('heLovesYou');
-        }
-      } else if (q.type === 'single') {
-        isCorrect = (selectedKey === `img${q.correctIdx + 1}`);
-        resultMsg = isCorrect ? q.onCorrect : q.onWrong;
-      } else if (q.type === 'special' || q.type === 'multi-text') {
-        const res = q.onSelect(selectedIndex - 1);
-        isCorrect = res.ok;
-        resultMsg = res.msg;
-      }
-
-      // ========== 新增：满分后仅显示指定文字 ==========
-      if (gameState.score === CONFIG.maxScore) {
-        resultMsg = '已经...满了...♂♂♂';
-      }
-
-      if (isCorrect) {
-        gameState.correctCount++;
-        gameState.score += CONFIG.scorePerCorrect;
-        if (gameState.score > CONFIG.maxScore) gameState.score = CONFIG.maxScore;
-        el.scoreNum.textContent = gameState.score;
-        showMessage(resultMsg, 'win');
-        if (gameState.score === 50 || gameState.score === CONFIG.maxScore) showScorePopup(gameState.score);
-        if (q.achievement) unlockAchievement(q.achievement);
-
-        // 连续选择统计（成就用）
-        if (selectedKey === 'img1') gameState.consecutiveImg1Count++;
-        else gameState.consecutiveImg1Count = 0;
-
-        if (selectedKey !== 'img3') gameState.consecutiveNotImg3Count++;
-        else gameState.consecutiveNotImg3Count = 0;
-
-        if (selectedKey !== 'Adams') gameState.consecutiveNotAdams++;
-        else gameState.consecutiveNotAdams = 0;
-
-        // 连续选择成就判定
-        if (gameState.consecutiveImg1Count >= 4) unlockAchievement('forceful');
-        if (gameState.consecutiveNotImg3Count >= 4) unlockAchievement('forgotWho');
-        if (gameState.consecutiveNotAdams >= 5) unlockAchievement('witheredGrass');
-      } else {
-        gameState.wrongCount++;
-        showMessage(resultMsg, 'lose');
-        gameState.consecutiveImg1Count = 0;
-        gameState.consecutiveNotImg3Count = 0;
-        gameState.consecutiveNotAdams = 0;
-      }
-
-      setTimeout(() => {
-        gameState.isPlaying = true;
-        nextRound();
-      }, 1500);
+  // ========== 新增：选项位置计数 ==========
+  const posRecord = gameState.positionRecord;
+  if (selectedIndex === posRecord.lastPos) {
+    posRecord.repeatCount++;
+    if (posRecord.repeatCount > 10) {
+      showMessage('不许戳了！！！', 'normal');
     }
+  } else {
+    posRecord.lastPos = selectedIndex;
+    posRecord.repeatCount = 1;
+  }
+
+  // ========== 原有答题逻辑 ==========
+  if (q.type === 'single-key') {
+    isCorrect = selectedKey === q.correct;
+    resultMsg = isCorrect ? q.msgWin : q.msgLose;
+
+    // ========== 新增：朝南题目选错img4触发成就 ==========
+    if (q.id === 6 && selectedKey === 'img4' && !isCorrect) {
+      unlockAchievement('heLovesYou');
+    }
+  } else if (q.type === 'single') {
+    isCorrect = (selectedKey === `img${q.correctIdx + 1}`);
+    resultMsg = isCorrect ? q.onCorrect : q.onWrong;
+  } else if (q.type === 'special' || q.type === 'multi-text') {
+    const res = q.onSelect(selectedIndex - 1);
+    isCorrect = res.ok;
+    resultMsg = res.msg;
+  }
+
+  // ========== 新增：满分后仅显示指定文字 ==========
+  if (gameState.score === CONFIG.maxScore) {
+    resultMsg = '已经...满了...♂♂♂';
+  }
+
+  if (isCorrect) {
+    gameState.correctCount++;
+    gameState.score += CONFIG.scorePerCorrect;
+    if (gameState.score > CONFIG.maxScore) gameState.score = CONFIG.maxScore;
+    el.scoreNum.textContent = gameState.score;
+    showMessage(resultMsg, 'win');
+    if (gameState.score === 50 || gameState.score === CONFIG.maxScore) showScorePopup(gameState.score);
+    if (q.achievement) unlockAchievement(q.achievement);
+
+    // 连续选择统计（成就用）- 正确时仍正常计数
+    if (selectedKey === 'img1') gameState.consecutiveImg1Count++;
+    else gameState.consecutiveImg1Count = 0;
+
+    if (selectedKey !== 'img3') gameState.consecutiveNotImg3Count++;
+    else gameState.consecutiveNotImg3Count = 0;
+
+    if (selectedKey !== 'Adams') gameState.consecutiveNotAdams++;
+    else gameState.consecutiveNotAdams = 0;
+
+    // 连续选择成就判定
+    if (gameState.consecutiveImg1Count >= 4) unlockAchievement('forceful');
+    if (gameState.consecutiveNotImg3Count >= 4) unlockAchievement('forgotWho');
+    if (gameState.consecutiveNotAdams >= 5) unlockAchievement('witheredGrass');
+  } else {
+    gameState.wrongCount++;
+    showMessage(resultMsg, 'lose');
+    // ========== 修改：答题错误时，仅重置以下计数器（3项目标成就不重置） ==========
+    // 保留：连续选img1、连续不选img3、连续不选Adams 的计数
+    // 重置：其他原有计数器（不影响目标成就）
+    gameState.consecutiveImg1Count = gameState.consecutiveImg1Count; // 无操作 = 不重置
+    gameState.consecutiveNotImg3Count = gameState.consecutiveNotImg3Count; // 无操作 = 不重置
+    gameState.consecutiveNotAdams = gameState.consecutiveNotAdams; // 无操作 = 不重置
+  }
+
+  setTimeout(() => {
+    gameState.isPlaying = true;
+    nextRound();
+  }, 1500);
+}
+
 
     function resetGame() {
       clearInterval(gameState.timer);
