@@ -204,7 +204,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 999;
+      z-index:  999;
       position: relative;
     }
     .ad-title {
@@ -492,6 +492,29 @@
       <h3 class="ad-title">♂♂火热换装 在线漫画♂♂</h3>
       <a href="javascript:;" class="ad-cta" id="newAdCta">点击查看潮流穿搭</a>
     </div>
+
+    <!-- 新增：评论区 -->
+    <div class="comment-section" style="margin-top: 20px; padding: 16px; background: #2d2d2d; border-radius: 12px;">
+      <h3 style="font-size: 18px; color: #ffd700; margin-bottom: 12px; text-align: center;">玩家评论区</h3>
+      <!-- 评论输入框 -->
+      <div style="margin-bottom: 16px;">
+        <textarea 
+          id="commentInput" 
+          style="width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333333; color: #ffffff; font-size: 14px; min-height: 80px; resize: none;"
+          placeholder="来说说你的游戏体验吧～"></textarea>
+        <button 
+          id="submitComment" 
+          style="width: 100%; margin-top: 8px; padding: 12px 0; background: #ffd700; color: #121212; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">
+          提交评论
+        </button>
+      </div>
+      <!-- 评论列表 -->
+      <div style="max-height: 300px; overflow-y: auto; padding-right: 8px;">
+        <h4 style="font-size: 14px; color: #aaaaaa; margin-bottom: 8px;">最新评论（共<span id="commentCount">0</span>条）</h4>
+        <div id="commentList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- 广告关闭确认弹窗 -->
@@ -532,7 +555,7 @@
   </div>
 
   <!-- ========== 新增：成就解锁弹窗 ========== -->
-  <div class="achievement-modal hidden-cls" id="achievementModal">
+  <div class="="achievement-modal hidden-cls" id="achievementModal">
     <div class="achievement-modal-icon">🏆</div>
     <h3 class="achievement-modal-name" id="modalAchievementName"></h3>
     <p class="achievement-modal-desc" id="modalAchievementDesc"></p>
@@ -542,24 +565,25 @@
   <script>
 // ========== 配置项 ==========
     const CONFIG = {
-      // 答题素材：移除「正经衣服」
+      // 答题素材：新增「席勒」图片
       answerImages: {
         '酒馆伙计': '酒馆伙计.png',
         '宋': '宋.jpg',
         '朝南': '朝南.jpg',
         'Adams': 'Adams.jpg',
+        '席勒': '席勒.jpg', // 新增题目图片
         'img1': 'img1.jpg',
         'img2': 'img2.jpg',
         'img3': 'img3.jpg',
         'img4': 'img4.jpg'
       },
-      // 广告素材：新广告添加「正经衣服.jpg」
+      // 广告素材：原有广告新增「广告席勒」
       adMaterials: {
-        original: ['广告.png', '广告2.jpg', '广告3.jpg'],
+        original: ['广告.png', '广告2.jpg', '广告3.jpg', '广告席勒.jpg'], // 新增广告图片
         new: ['橙帕.jpg', '潮男帕.jpg', '潮男帕的后背.jpg', '正经衣服.jpg'],
         cover: '广告封面.gif'
       },
-      // 恢复所有初始题目
+      // 题目：新增第8题「选择打人很痛的非逃犯。」
       questions: [
         {id:0,text:'找出里面所有男同',type:'special',onSelect:()=>({ok:false,msg:'哈哈骗你的，我只设置了单选'})},
         {id:1,text:'找出真正的厨师',type:'single',correctIdx:0,onCorrect:'你看起来很好吃',onWrong:'Cazzo，你不认识我吗',achievement:'chef'},
@@ -568,9 +592,11 @@
         {id:4,text:'谁没有对象？',type:'single-key',correct:'酒馆伙计',msgWin:'回答正确！',msgLose:'回答错误！',achievement:'pBrother'},
         {id:5,text:'选出真的不是直男的人。',type:'single-key',correct:'宋',msgWin:'宋酱宋酱我们喜欢你❤️',msgLose:'好像也没错...',achievement:'deepWaterCity'},
         {id:6,text:'大富哥是哪位？',type:'single-key',correct:'朝南',msgWin:'朝哥请表演一下那个！💰💰💰',msgLose:'不，这位应该不会给你钱。',achievement:'goldCoin'},
-        {id:7,text:'你好。请嬷——',type:'single-key',correct:'Adams',msgWin:'“我可是直男呀！”',msgLose:'诶？那也不错。'}
+        {id:7,text:'你好。请嬷——',type:'single-key',correct:'Adams',msgWin:'“我可是直男呀！”',msgLose:'诶？那也不错。'},
+        // 新增题目：id=8，答案=席勒，自定义正确/错误提示
+{id:8,text:'选择打人很痛的非逃犯。',type:'single-key',correct:'席勒',msgWin:'“您好。我在等我的神父。”',msgLose:'和我的.ra手枪说去吧',achievement:'forWorld'}
       ],
-      // 补充完整成就配置（原代码遗漏）
+      // 成就：新增2项成就
       achievements: {
         straight: {name:'我是直男',desc:'勇敢承认自己的身份',method:'选择「找出图中的直男」题目中的直男选项'},
         gayPride: {name:'骄傲之GAY',desc:'为自己的身份感到骄傲',method:'选择「找出图中的直男」题目中的GAY选项'},
@@ -586,7 +612,11 @@
         goldCoin: {name:'爆点金币？',desc:'第一次选择朝南并答对',method:'首次回答「大富哥是哪位？」时选对朝南'},
         deepWaterCity: {name:'深水城故事',desc:'正确回答「选出真的不是直男的人」',method:'答对「选出真的不是直男的人」问题'},
         fashionIcon: {name:'衣品达人❤️',desc:'点开新添加的广告',method:'点击「♂♂火热换装 在线漫画♂♂」广告并查看'},
-        schiller: {name:'Schiller.',desc:'点开原有广告并看到指定图片',method:'点击原有广告且随机到第一张广告图时解锁'}
+        schiller: {name:'Schiller.',desc:'点开原有广告并看到指定图片',method:'点击原有广告且随机到第一张广告图时解锁'},
+        // 新增成就1：For WORLD（答对席勒题目解锁）
+        forWorld: {name:'For WORLD',desc:'认可席勒的拳法实力',method:'正确回答「选择打人很痛的非逃犯。」题目'},
+        // 新增成就2：安瑟尔の减速区（广告随机到广告席勒解锁）
+        anselDeceleration: {name:'安瑟尔の减速区',desc:'在原有广告中发现席勒',method:'点击「快❤️进❤️来❤️」广告并随机到「广告席勒」图片'}
       },
       timeLimit: 10, // 倒计时改为10s
       scorePerCorrect: 5,
@@ -656,7 +686,12 @@
       achievementModal: document.getElementById('achievementModal'),
       modalAchievementName: document.getElementById('modalAchievementName'),
       modalAchievementDesc: document.getElementById('modalAchievementDesc'),
-      modalAchievementClose: document.getElementById('modalAchievementClose')
+      modalAchievementClose: document.getElementById('modalAchievementClose'),
+      // 评论区DOM
+      commentInput: document.getElementById('commentInput'),
+      submitComment: document.getElementById('submitComment'),
+      commentCount: document.getElementById('commentCount'),
+      commentList: document.getElementById('commentList')
     };
 // ========== 工具函数 ==========
     function handleImageError(img, altText) {
@@ -722,7 +757,7 @@
       let finalOptions = [];
       if (correctKey) {
         const otherKeys = allKeys.filter(key => key !== correctKey);
-        const randomOthers = shuffleArray(otherKeys).slice(00, 3);
+        const randomOthers = shuffleArray(otherKeys).slice(0, 3);
         finalOptions = shuffleArray([...randomOthers, correctKey]);
       } else if (correctIdx !== null) {
         const imgKeys = ['img1', 'img2', 'img3', 'img4'];
@@ -842,6 +877,8 @@
 
       // 绑定广告事件
       bindAdEvents();
+      // 绑定评论区事件
+      bindCommentEvents();
     }
 
     function startGame() {
@@ -862,7 +899,7 @@
 
     function nextRound() {
       clearInterval(gameState.timer);
-      // 替换为不重复题目
+      // 替换为不重复题目（包含新增题目）
       gameState.currentQuestion = getNonRepeatQuestion();
       gameState.round++;
       gameState.timeLeft = CONFIG.timeLimit;
@@ -920,91 +957,90 @@
       });
     }
 function handleOptionClick() {
-  if (!gameState.isPlaying) return;
-  clearInterval(gameState.timer);
-  gameState.isPlaying = false;
+      if (!gameState.isPlaying) return;
+      clearInterval(gameState.timer);
+      gameState.isPlaying = false;
 
-  const selectedKey = this.dataset.key;
-  const selectedIndex = Number(this.dataset.index);
-  const q = gameState.currentQuestion;
-  let isCorrect = false;
-  let resultMsg = '';
+      const selectedKey = this.dataset.key;
+      const selectedIndex = Number(this.dataset.index);
+      const q = gameState.currentQuestion;
+      let isCorrect = false;
+      let resultMsg = '';
 
-  // ========== 新增：选项位置计数 ==========
-  const posRecord = gameState.positionRecord;
-  if (selectedIndex === posRecord.lastPos) {
-    posRecord.repeatCount++;
-    if (posRecord.repeatCount > 10) {
-      showMessage('不许戳了！！！', 'normal');
+      // ========== 新增：选项位置计数 ==========
+      const posRecord = gameState.positionRecord;
+      if (selectedIndex === posRecord.lastPos) {
+        posRecord.repeatCount++;
+        if (posRecord.repeatCount > 10) {
+          showMessage('不许戳了！！！', 'normal');
+        }
+      } else {
+        posRecord.lastPos = selectedIndex;
+        posRecord.repeatCount = 1;
+      }
+
+      // ========== 原有答题逻辑 ==========
+      if (q.type === 'single-key') {
+        isCorrect = selectedKey === q.correct;
+        resultMsg = isCorrect ? q.msgWin : q.msgLose;
+
+        // ========== 新增：朝南题目选错img4触发成就 ==========
+        if (q.id === 6 && selectedKey === 'img4' && !isCorrect) {
+          unlockAchievement('heLovesYou');
+        }
+      } else if (q.type === 'single') {
+        isCorrect = (selectedKey === `img${q.correctIdx + 1}`);
+        resultMsg = isCorrect ? q.onCorrect : q.onWrong;
+      } else if (q.type === 'special' || q.type === 'multi-text') {
+        const res = q.onSelect(selectedIndex - 1);
+        isCorrect = res.ok;
+        resultMsg = res.msg;
+      }
+
+      // ========== 新增：满分后仅显示指定文字 ==========
+      if (gameState.score === CONFIG.maxScore) {
+        resultMsg = '已经...满了...♂♂♂';
+      }
+
+      if (isCorrect) {
+        gameState.correctCount++;
+        gameState.score += CONFIG.scorePerCorrect;
+        if (gameState.score > CONFIG.maxScore) gameState.score = CONFIG.maxScore;
+        el.scoreNum.textContent = gameState.score;
+        showMessage(resultMsg, 'win');
+        if (gameState.score === 50 || gameState.score === CONFIG.maxScore) showScorePopup(gameState.score);
+        if (q.achievement) unlockAchievement(q.achievement); // 包含新增成就For WORLD
+
+        // 连续选择统计（成就用）- 正确时仍正常计数
+        if (selectedKey === 'img1') gameState.consecutiveImg1Count++;
+        else gameState.consecutiveImg1Count = 0;
+
+        if (selectedKey !== 'img3') gameState.consecutiveNotImg3Count++;
+        else gameState.consecutiveNotImg3Count = 0;
+
+        if (selectedKey !== 'Adams') gameState.consecutiveNotAdams++;
+        else gameState.consecutiveNotAdams = 0;
+
+        // 连续选择成就判定
+        if (gameState.consecutiveImg1Count >= 4) unlockAchievement('forceful');
+        if (gameState.consecutiveNotImg3Count >= 4) unlockAchievement('forgotWho');
+        if (gameState.consecutiveNotAdams >= 5) unlockAchievement('witheredGrass');
+      } else {
+        gameState.wrongCount++;
+        showMessage(resultMsg, 'lose');
+        // ========== 修改：答题错误时，仅重置以下计数器（3项目标成就不重置） ==========
+        // 保留：连续选img1、连续不选img3、连续不选Adams 的计数
+        // 重置：其他原有计数器（不影响目标成就）
+        gameState.consecutiveImg1Count = gameState.consecutiveImg1Count; // 无操作 = 不重置
+        gameState.consecutiveNotImg3Count = gameState.consecutiveNotImg3Count; // 无操作 = 不重置
+        gameState.consecutiveNotAdams = gameState.consecutiveNotAdams; // 无操作 = 不重置
+      }
+
+      setTimeout(() => {
+        gameState.isPlaying = true;
+        nextRound();
+      }, 1500);
     }
-  } else {
-    posRecord.lastPos = selectedIndex;
-    posRecord.repeatCount = 1;
-  }
-
-  // ========== 原有答题逻辑 ==========
-  if (q.type === 'single-key') {
-    isCorrect = selectedKey === q.correct;
-    resultMsg = isCorrect ? q.msgWin : q.msgLose;
-
-    // ========== 新增：朝南题目选错img4触发成就 ==========
-    if (q.id === 6 && selectedKey === 'img4' && !isCorrect) {
-      unlockAchievement('heLovesYou');
-    }
-  } else if (q.type === 'single') {
-    isCorrect = (selectedKey === `img${q.correctIdx + 1}`);
-    resultMsg = isCorrect ? q.onCorrect : q.onWrong;
-  } else if (q.type === 'special' || q.type === 'multi-text') {
-    const res = q.onSelect(selectedIndex - 1);
-    isCorrect = res.ok;
-    resultMsg = res.msg;
-  }
-
-  // ========== 新增：满分后仅显示指定文字 ==========
-  if (gameState.score === CONFIG.maxScore) {
-    resultMsg = '已经...满了...♂♂♂';
-  }
-
-  if (isCorrect) {
-    gameState.correctCount++;
-    gameState.score += CONFIG.scorePerCorrect;
-    if (gameState.score > CONFIG.maxScore) gameState.score = CONFIG.maxScore;
-    el.scoreNum.textContent = gameState.score;
-    showMessage(resultMsg, 'win');
-    if (gameState.score === 50 || gameState.score === CONFIG.maxScore) showScorePopup(gameState.score);
-    if (q.achievement) unlockAchievement(q.achievement);
-
-    // 连续选择统计（成就用）- 正确时仍正常计数
-    if (selectedKey === 'img1') gameState.consecutiveImg1Count++;
-    else gameState.consecutiveImg1Count = 0;
-
-    if (selectedKey !== 'img3') gameState.consecutiveNotImg3Count++;
-    else gameState.consecutiveNotImg3Count = 0;
-
-    if (selectedKey !== 'Adams') gameState.consecutiveNotAdams++;
-    else gameState.consecutiveNotAdams = 0;
-
-    // 连续选择成就判定
-    if (gameState.consecutiveImg1Count >= 4) unlockAchievement('forceful');
-    if (gameState.consecutiveNotImg3Count >= 4) unlockAchievement('forgotWho');
-    if (gameState.consecutiveNotAdams >= 5) unlockAchievement('witheredGrass');
-  } else {
-    gameState.wrongCount++;
-    showMessage(resultMsg, 'lose');
-    // ========== 修改：答题错误时，仅重置以下计数器（3项目标成就不重置） ==========
-    // 保留：连续选img1、连续不选img3、连续不选Adams 的计数
-    // 重置：其他原有计数器（不影响目标成就）
-    gameState.consecutiveImg1Count = gameState.consecutiveImg1Count; // 无操作 = 不重置
-    gameState.consecutiveNotImg3Count = gameState.consecutiveNotImg3Count; // 无操作 = 不重置
-    gameState.consecutiveNotAdams = gameState.consecutiveNotAdams; // 无操作 = 不重置
-  }
-
-  setTimeout(() => {
-    gameState.isPlaying = true;
-    nextRound();
-  }, 1500);
-}
-
 
     function resetGame() {
       clearInterval(gameState.timer);
@@ -1051,7 +1087,7 @@ function handleOptionClick() {
       showMessage(isYeah ? '解锁隐藏成就！' : '成就已重置', 'normal');
     }
 
-    // 成就墙渲染：未达成仅显示名称
+    // 成就墙渲染：未达成仅显示名称（包含新增成就）
     function renderAchievementWall() {
       el.achievementList.innerHTML = '';
       // 遍历前先判断成就配置是否存在，避免报错
@@ -1070,7 +1106,7 @@ function handleOptionClick() {
       });
     }
 
-    // ========== 广告逻辑修改：图片最多重复2次 ==========
+    // ========== 广告逻辑修改：新增广告席勒成就触发 ==========
     function bindAdEvents() {
       // 原有广告关闭
       el.originalAdClose.addEventListener('click', () => toggleModal(el.adConfirmModal, true));
@@ -1079,7 +1115,7 @@ function handleOptionClick() {
         toggleModal(el.adConfirmModal, true);
       }, { passive: false });
 
-      // 原有广告点击
+      // 原有广告点击（新增广告席勒成就触发）
       el.originalAdCta.addEventListener('click', () => {
         showRandomAdImg('original');
       });
@@ -1151,7 +1187,7 @@ function handleOptionClick() {
       });
     }
 
-    // 广告图片随机展示：最多重复2次
+    // 广告图片随机展示：新增广告席勒成就触发
     function showRandomAdImg(type) {
       const selectedImg = getNonRepeatAdImg(type);
 
@@ -1165,10 +1201,113 @@ function handleOptionClick() {
       if (type === 'original' && selectedImg === CONFIG.adMaterials.original[0]) {
         unlockAchievement('schiller');
       }
+
+      // ========== 新增：广告随机到「广告席勒」解锁成就 ==========
+      if (type === 'original' && selectedImg === '广告席勒.jpg') {
+        unlockAchievement('anselDeceleration');
+      }
     }
 
-    // 初始化游戏
-    document.addEventListener('DOMContentLoaded', initGame);
+    // ========== 评论区功能 ==========
+    function bindCommentEvents() {
+      const commentInput = document.getElementById('commentInput');
+      const submitBtn = document.getElementById('submitComment');
+
+      // 点击提交
+      submitBtn.addEventListener('click', submitComment);
+      submitBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        submitComment();
+      }, { passive: false });
+
+      // 回车提交
+      commentInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          submitComment();
+        }
+      });
+    }
+
+    function submitComment() {
+      const commentInput = document.getElementById('commentInput');
+      const content = commentInput.value.trim();
+      if (!content) {
+        showMessage('评论内容不能为空哦～', 'normal');
+        return;
+      }
+
+      // 构建评论数据
+      const comment = {
+        id: Date.now(), // 时间戳作为唯一ID
+        content: content,
+        time: formatTime(new Date())
+      };
+
+      // 从本地存储读取现有评论
+      const comments = JSON.parse(localStorage.getItem('gameComments') || '[]');
+      // 添加新评论到头部
+      comments.unshift(comment);
+      // 保存到本地存储
+      localStorage.setItem('gameComments', JSON.stringify(comments));
+
+      // 刷新评论列表
+      loadComments();
+      // 清空输入框
+      commentInput.value = '';
+      showMessage('评论提交成功！', 'win');
+    }
+
+    function loadComments() {
+      const commentList = document.getElementById('commentList');
+      const commentCount = document.getElementById('commentCount');
+      // 从本地存储读取评论
+      const comments = JSON.parse(localStorage.getItem('gameComments') || '[]');
+
+      // 更新评论数量
+      commentCount.textContent = comments.length;
+
+      // 渲染评论列表
+      if (comments.length === 0) {
+        commentList.innerHTML = '<div style="text-align: center; padding: 20px; color: #888888; font-size: 14px;">还没有评论，快来抢沙发～</div>';
+        return;
+      }
+
+      commentList.innerHTML = '';
+      comments.forEach(comment => {
+        const commentItem = document.createElement('div');
+        commentItem.style.padding = '12px';
+        commentItem.style.background = '#1e1e1e';
+        commentItem.style.borderRadius = '8px';
+        commentItem.innerHTML = `
+          <p style="font-size: 14px; color: #ffffff; margin-bottom: 4px;">${comment.content}</p>
+          <p style="font-size: 12px; color: #888888; text-align: right;">${comment.time}</p>
+        `;
+        commentList.appendChild(commentItem);
+      });
+    }
+
+    function formatTime(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hour}:${minute}`;
+    }
+
+    // 初始化游戏+评论区
+    function initGameWithComment() {
+      initGame();
+      initCommentSection();
+    }
+
+    function initCommentSection() {
+      loadComments();
+    }
+
+    // 初始化游戏+评论区
+    document.addEventListener('DOMContentLoaded', initGameWithComment);
   </script>
 </body>
 </html>
