@@ -508,29 +508,35 @@
       <a href="javascript:;" class="ad-cta" id="newAdCta">点击查看潮流穿搭</a>
     </div>
 
-    <!-- 新增：评论区 -->
-    <div class="comment-section" style="margin-top: 20px; padding: 16px; background: #2d2d2d; border-radius: 12px;">
-      <h3 style="font-size: 18px; color: #ffd700; margin-bottom: 12px; text-align: center;">玩家评论区</h3>
-      <!-- 评论输入框 -->
-      <div style="margin-bottom: 16px;">
-        <textarea 
-          id="commentInput" 
-          style="width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333333; color: #ffffff; font-size: 14px; min-height: 80px; resize: none;"
-          placeholder="来说说你的游戏体验吧～"></textarea>
-        <button 
-          id="submitComment" 
-          style="width: 100%; margin-top: 8px; padding: 12px 0; background: #ffd700; color: #121212; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">
-          提交评论
-        </button>
-      </div>
-      <!-- 评论列表 -->
-      <div style="max-height: 300px; overflow-y: auto; padding-right: 8px;">
-        <h4 style="font-size: 14px; color: #aaaaaa; margin-bottom: 8px;">最新评论（共<span id="commentCount">0</span>条）</h4>
-        <div id="commentList" style="display: flex; flex-direction: column; gap: 12px;"></div>
-      </div>
-    </div>
-
+   <!-- 新增：评论区 -->
+<div class="comment-section" style="margin-top: 20px; padding: 16px; background: #2d2d2d; border-radius: 12px;">
+  <h3 style="font-size: 18px; color: #ffd700; margin-bottom: 12px; text-align: center;">玩家评论区</h3>
+  <!-- 评论输入框 -->
+  <div style="margin-bottom: 16px;">
+    <textarea 
+      id="commentInput" 
+      style="width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333333; color: #ffffff; font-size: 14px; min-height: 80px; resize: none;"
+      placeholder="来说说你的游戏体验吧～"></textarea>
+    <button 
+      id="submitComment" 
+      style="width: 100%; margin-top: 8px; padding: 12px 0; background: #ffd700; color: #121212; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">
+      提交评论
+    </button>
   </div>
+  <!-- 评论列表 -->
+  <div style="max-height: 300px; overflow-y: auto; padding-right: 8px;">
+    <h4 style="font-size: 14px; color: #aaaaaa; margin-bottom: 8px;">最新评论（共<span id="commentCount">0</span>条）</h4>
+    <div id="commentList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+  </div>
+  <!-- 嵌入Utterances评论代码（异地互通评论区） -->
+  <script src="https://utteranc.es/client.js"
+          repo="weique908-hash/GAYM"
+          issue-term="title"
+          theme="preferred-color-scheme"
+          crossorigin="anonymous"
+          async>
+  </script>
+</div>
 
   <!-- 广告关闭确认弹窗 -->
   <div class="modal-overlay hidden-cls" id="adConfirmModal">
