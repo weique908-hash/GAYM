@@ -416,6 +416,7 @@
       box-shadow: 0 10px 40px rgba(255, 215, 0, 0.6); /* 金色发光阴影 */
       text-align: center;
       animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹出动画 */
+      transition: opacity 0.3s ease, transform 0.3s ease; /* 新增：消失过渡效果 */
     }
     /* 弹窗弹出动画 */
     @keyframes popIn {
@@ -505,6 +506,21 @@
         width: 95%;
       }
     }
+    /* ========== 优化：成就弹窗手机端显示细节（仅追加） ========== */
+    #achievementModal {
+      z-index: 9999 !important; /* 确保弹窗在最顶层，不被遮挡 */
+      touch-action: manipulation; /* 禁用默认缩放，提升触控体验 */
+    }
+    #achievementModal > div {
+      width: 90% !important; /* 适配手机窄屏 */
+      max-width: 350px !important; /* 限制最大宽度 */
+      padding: 20px 15px !important; /* 优化内边距 */
+    }
+    #achievementConfirmBtn {
+      width: 100% !important; /* 按钮占满宽度，提升触控面积 */
+      padding: 12px 0 !important;
+      font-size: 16px !important;
+    }
   </style>
 </head>
 <body>
@@ -534,14 +550,16 @@
         <p class="status-value" id="timerNum">--</p>
       </div>
     </div>
-<!-- 功能按键容器（横向排列+手机端适配，修复id匹配） -->
+
+    <!-- 功能按键容器（横向排列+手机端适配） -->
     <div id="gameBtnContainer">
       <button id="startBtn">开始游戏</button>
       <button id="resetBtn">重置游戏</button>
       <button id="achievementBtn">成就墙</button>
       <button id="resetAchieveBtn">重置成就</button>
     </div>
-<!-- 原有广告区域：显示广告封面GIF -->
+
+    <!-- 原有广告区域：显示广告封面GIF -->
     <div class="ad-section" id="originalAd">
       <button class="ad-close-btn" id="originalAdClose">×</button>
       <h3 class="ad-title">快❤️进❤️来❤️</h3>
@@ -557,6 +575,7 @@
       <h3 class="ad-title">♂♂火热换装 在线漫画♂♂</h3>
       <a href="javascript:;" class="ad-cta" id="newAdCta">点击查看潮流穿搭</a>
     </div>
+
 <!-- 玩家评论区（保留最新3条+折叠其余，适配手机端） -->
 <div class="comment-section" style="margin-top: 20px; padding: 16px; background: #2d2d2d; border-radius: 12px; max-width: 100%; overflow: hidden;">
   <!-- 折叠按钮 -->
@@ -577,7 +596,8 @@
     <p style="font-size: 12px; color: #aaaaaa; margin-top: 10px; text-align: right; padding-right: 5px;">*仓库所有者可在GitHub Issues中删除评论</p>
   </div>
 </div>
-<!-- 广告关闭确认弹窗 -->
+
+  <!-- 广告关闭确认弹窗 -->
   <div class="modal-overlay hidden-cls" id="adConfirmModal">
     <div class="modal-container">
       <h3 class="modal-title">不进来看看吗？</h3>
@@ -617,9 +637,9 @@
 <!-- 成就弹窗（修复关闭按钮） -->
 <div id="achievementModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; display: none;">
   <div style="background: #ffd700; padding: 30px; border-radius: 15px; text-align: center; width: 80%; max-width: 400px;">
-    <div style="width: 80px; height: 80px; margin-bottom: 20px; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23000\"><path d=\"M12 15l-5.5 3 1-6.5L3 7.5l6.5-.5L12 1l2.5 6 6.5.5-4.5 4 1 6.5z\"/></svg>'); background-repeat: no-repeat; background-size: contain;"></div>
-    <h2 style="font-size: 24px; color: #000; margin-bottom: 10px;">OMG♂</h2>
-    <p style="font-size: 16px; color: #000; margin-bottom: 20px;">你发现了隐藏的秘密！</p>
+    <div style="width: 80px; height: 80px; margin-bottom: 20px; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"httphttp://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23000\"><path d=\"M12 15l-5.5 3 1-6.5L3 7.5l6.5-.5L12 1l2.5 6 6.5.5-4.5 4 1 6.5z\"/></svg>'); background-repeat: no-repeat; background-size: contain;"></div>
+    <h2 style="font-size: 24px; color: #000; margin-bottom: 10px;" id="modalAchievementName">OMG♂</h2>
+    <p style="font-size: 16px; color: #000; margin-bottom: 20px;" id="modalAchievementDesc">你发现了隐藏的秘密！</p>
     <button id="achievementConfirmBtn" style="background: #000; color: #ffd700; border: none; padding: 10px 20px; border-radius: 8px; font-size: 18px; cursor: pointer; touch-action: manipulation;">确定</button>
   </div>
 </div>
@@ -651,7 +671,7 @@
         {id:2,text:'找出失去了球棍的心理治疗师',type:'single',correctIdx:3,onCorrect:'隔壁他男人在双持ing',onWrong:'再选错就过来心理治疗',achievement:'therapist'},
         {id:3,text:'找出图中的直男',type:'multi-text',onSelect:(idx)=>{if(idx===0||idx===1){unlockAchievement('straight');return{ok:true,msg:'💞我们是真正的♂直男♂呀'};}else{unlockAchievement('gayPride');return{ok:true,msg:'🌈🌈🌈骄傲之♂GAY🌈🌈🌈'};}}},
         {id:4,text:'谁没有对象？',type:'single-key',correct:'酒馆伙计',msgWin:'回答正确！',msgLose:'回答错误！',achievement:'pBrother'},
-               {id:5,text:'选出真的不是直男的人。',type:'single-key',correct:'宋',msgWin:'宋酱宋酱我们喜欢你❤️',msgLose:'好像也没错...',achievement:'deepWaterCity'},
+        {id:5,text:'选出真的不是直男的人。',type:'single-key',correct:'宋',msgWin:'宋酱宋酱我们喜欢你❤️',msgLose:'好像也没错...',achievement:'deepWaterCity'},
         {id:6,text:'大富哥是哪位？',type:'single-key',correct:'朝南',msgWin:'朝哥请表演一下那个！💰💰💰',msgLose:'不，这位应该不会给你钱。',achievement:'goldCoin'},
         {id:7,text:'你好。请嬷——',type:'single-key',correct:'Adams',msgWin:'“我真的是直男口牙！”',msgLose:'诶？那也不错。'},
         // 新增题目：id=8，答案=席勒，成就=forWorld
@@ -719,7 +739,6 @@
       messageBox: document.getElementById('messageBox'),
       scoreNum: document.getElementById('scoreNum'),
       timerNum: document.getElementById('timerNum'),
-      // 修复：按钮id与HTML保持一致（关键！确保功能生效）
       startBtn: document.getElementById('startBtn'),
       resetBtn: document.getElementById('resetBtn'),
       achievementBtn: document.getElementById('achievementBtn'),
@@ -743,11 +762,11 @@
       achievementWall: document.getElementById('achievementWall'),
       achievementWallClose: document.getElementById('achievementWallClose'),
       achievementList: document.getElementById('achievementList'),
-      // ========== 新增：成就弹窗DOM ==========
+      // ========== 修复：成就弹窗DOM元素引用（匹配实际ID） ==========
       achievementModal: document.getElementById('achievementModal'),
       modalAchievementName: document.getElementById('modalAchievementName'),
       modalAchievementDesc: document.getElementById('modalAchievementDesc'),
-      modalAchievementClose: document.getElementById('modalAchievementClose'),
+      achievementConfirmBtn: document.getElementById('achievementConfirmBtn'), // 正确绑定关闭按钮
       // 评论区DOM
       commentInput: document.getElementById('commentInput'),
       submitComment: document.getElementById('submitComment'),
@@ -830,19 +849,47 @@
       return finalOptions;
     }
 
-    // ========== 修改：解锁成就函数，添加弹窗逻辑 ==========
+    // ========== 新增：独立的成就弹窗关闭函数（统一逻辑） ==========
+    function closeAchievementModal() {
+      const modal = el.achievementModal;
+      // 新增：消失过渡效果，更自然
+      modal.style.opacity = '0';
+      modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
+      // 延迟隐藏，确保过渡动画完成
+      setTimeout(() => {
+        modal.style.display = 'none';
+        modal.style.opacity = '1'; // 恢复初始状态，避免下次显示异常
+        modal.style.transform = 'translate(-50%, -50%) scale(1.1)';
+      }, 300);
+      clearTimeout(modal.autoCloseTimer); // 清除自动关闭定时器
+      // 修复：恢复游戏状态，解决卡住问题
+      if (gameState.currentQuestion && !gameState.isPlaying) {
+        gameState.isPlaying = true;
+      }
+    }
+
+    // ========== 修复：解锁成就函数（添加2秒自动关闭+解除阻塞） ==========
     function unlockAchievement(achievementId) {
       if (gameState.unlockedAchievements.has(achievementId)) return;
       gameState.unlockedAchievements.add(achievementId);
       localStorage.setItem('unlockedAchievements', JSON.stringify(Array.from(gameState.unlockedAchievements)));
       renderAchievementWall();
       const achievement = CONFIG.achievements[achievementId];
+      
       // 显示成就弹窗
+      const modal = el.achievementModal;
       el.modalAchievementName.textContent = achievement.name;
       el.modalAchievementDesc.textContent = achievement.desc || '';
-      el.achievementModal.classList.remove('hidden-cls');
+      modal.style.display = 'flex';
+
       // 同时在消息框提示
       showMessage(`解锁成就：${achievement.name}`, 'win');
+
+      // ========== 新增：2秒后自动关闭弹窗 ==========
+      clearTimeout(modal.autoCloseTimer); // 防抖，避免多次触发叠加
+      modal.autoCloseTimer = setTimeout(() => {
+        closeAchievementModal();
+      }, 2000);
     }
 
     function showMessage(text, type = 'normal') {
@@ -875,13 +922,11 @@
       handleImageError(el.adCoverGif, '广告封面');
       renderAchievementWall();
       resetGame();
-      // ========== 绑定成就弹窗关闭按钮 ==========
-      el.modalAchievementClose.addEventListener('click', () => {
-        el.achievementModal.classList.add('hidden-cls');
-      });
-      el.modalAchievementClose.addEventListener('touchend', (e) => {
+      // ========== 修复：绑定成就弹窗关闭按钮（适配手机端触控） ==========
+      el.achievementConfirmBtn.addEventListener('click', closeAchievementModal);
+      el.achievementConfirmBtn.addEventListener('touchend', (e) => {
         e.preventDefault();
-        el.achievementModal.classList.add('hidden-cls');
+        closeAchievementModal();
       }, { passive: false });
     }
 
@@ -1368,6 +1413,7 @@ function handleOptionClick() {
 
     // 初始化游戏+评论区
     document.addEventListener('DOMContentLoaded', initGameWithComment);
+
 // 评论区折叠/展开功能（保留最新3条，适配手机端）
 let commentCollapsed = true; // 默认折叠更多
 const toggleBtn = document.getElementById('toggleCommentBtn');
