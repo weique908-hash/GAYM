@@ -570,6 +570,24 @@
         {id:6,text:'大富哥是哪位？',type:'single-key',correct:'朝南',msgWin:'朝哥请表演一下那个！💰💰💰',msgLose:'不，这位应该不会给你钱。',achievement:'goldCoin'},
         {id:7,text:'你好。请嬷——',type:'single-key',correct:'Adams',msgWin:'“我可是直男呀！”',msgLose:'诶？那也不错。'}
       ],
+      // 补充完整成就配置（原代码遗漏）
+      achievements: {
+        straight: {name:'我是直男',desc:'勇敢承认自己的身份',method:'选择「找出图中的直男」题目中的直男选项'},
+        gayPride: {name:'骄傲之GAY',desc:'为自己的身份感到骄傲',method:'选择「找出图中的直男」题目中的GAY选项'},
+        chef: {name:'你是食材吗',desc:'找到真正的厨师',method:'正确回答「找出真正的厨师」题目'},
+        therapist: {name:'心理治疗师',desc:'找到失去了球棍的心理治疗师',method:'正确回答「找出失去了球棍的心理治疗师」题目'},
+        maxScore: {name:'天选男同🌈',desc:'达到满分100分',method:'在游戏中获得100分'},
+        forgotWho: {name:'好像忘了谁...',desc:'总觉得漏掉了什么重要的人',method:'连续4次不选择img3.jpg图片'},
+        forceful: {name:'强人所难♂',desc:'对某个选项有着执着的偏爱',method:'连续4次选择img1.jpg图片'},
+        omg: {name:'OMG♂',desc:'你发现了隐藏的秘密！',method:'重置成就时选择"yeah♂"选项',hidden: true},
+        pBrother: {name:'P...P弟？',desc:'在「谁没有对象？」问题中选择酒馆伙计',method:'回答「谁没有对象？」问题并选择酒馆伙计'},
+        witheredGrass: {name:'生命为何自称枯草？',desc:'连续5次不选择Adams',method:'答题时连续5次不选Adams图片'},
+        heLovesYou: {name:'他说他爱你。',desc:'朝南题目中选错img4触发',method:'回答「大富哥是哪位？」时选错误选项img4'},
+        goldCoin: {name:'爆点金币？',desc:'第一次选择朝南并答对',method:'首次回答「大富哥是哪位？」时选对朝南'},
+        deepWaterCity: {name:'深水城故事',desc:'正确回答「选出真的不是直男的人」',method:'答对「选出真的不是直男的人」问题'},
+        fashionIcon: {name:'衣品达人❤️',desc:'点开新添加的广告',method:'点击「♂♂火热换装 在线漫画♂♂」广告并查看'},
+        schiller: {name:'Schiller.',desc:'点开原有广告并看到指定图片',method:'点击原有广告且随机到第一张广告图时解锁'}
+      },
       timeLimit: 10, // 倒计时改为10s
       scorePerCorrect: 5,
       maxScore: 100,
@@ -592,7 +610,8 @@
       consecutiveNotAdams: 0,
       firstChooseChaonan: false,
       hasGotPBrother: false,
-      unlockedAchievements: new Set(JSON.parse(localStorage.getItem('unlockedAchievements')) || []),
+      // 修复：localStorage初始化，避免null导致Set创建失败
+      unlockedAchievements: new Set(JSON.parse(localStorage.getItem('unlockedAchievements') || '[]')),
       triggeredScorePopups: new Set(),
       // 新增：广告图片计数
       adImgRecord: { original: { lastImg: '', repeatCount: 0 }, new: { lastImg: '', repeatCount: 0 } },
@@ -703,7 +722,7 @@
       let finalOptions = [];
       if (correctKey) {
         const otherKeys = allKeys.filter(key => key !== correctKey);
-        const randomOthers = shuffleArray(otherKeys).slice(0, 3);
+        const randomOthers = shuffleArray(otherKeys).slice(00, 3);
         finalOptions = shuffleArray([...randomOthers, correctKey]);
       } else if (correctIdx !== null) {
         const imgKeys = ['img1', 'img2', 'img3', 'img4'];
@@ -1013,11 +1032,12 @@ function handleOptionClick() {
       showMessage('点击「开始游戏」开始挑战', 'normal');
     }
 
-    // ========== 重置成就逻辑修改：yeah♂不重置 ==========
+    // ========== 修复：重置成就函数，避免localStorage操作异常导致崩溃 ==========
     function resetAchievements(isYeah) {
       if (!isYeah) {
         gameState.unlockedAchievements.clear();
-        localStorage.removeItem('unlockedAchievements');
+        // 修复：存入空数组而非删除，确保读取时格式统一
+        localStorage.setItem('unlockedAchievements', JSON.stringify([]));
       }
       // 无论是否重置都解锁omg成就
       if (!gameState.unlockedAchievements.has('omg')) {
@@ -1030,6 +1050,8 @@ function handleOptionClick() {
     // 成就墙渲染：未达成仅显示名称
     function renderAchievementWall() {
       el.achievementList.innerHTML = '';
+      // 遍历前先判断成就配置是否存在，避免报错
+      if (!CONFIG.achievements) return;
       Object.entries(CONFIG.achievements).forEach(([id, achievement]) => {
         const isUnlocked = gameState.unlockedAchievements.has(id);
         const isHidden = achievement.hidden || false;
