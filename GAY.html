@@ -204,7 +204,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index:  999;
+      z-index: 999;
       position: relative;
     }
     .ad-title {
@@ -401,43 +401,58 @@
     .hidden-cls {
       display: none !important;
     }
-    /* ========== 新增：成就弹窗样式 ========== */
+    /* ========== 强化：成就弹窗样式（醒目大弹窗） ========== */
     .achievement-modal {
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
-      background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
-      border-radius: 16px;
-      padding: 24px;
-      max-width: 320px;
-      width: 90%;
-      z-index: 500;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      transform: translate(-50%, -50%) scale(1.1); /* 放大弹窗 */
+      background: linear-gradient(135deg, #ffd700 0%, #ffb900 100%); /* 金色渐变背景，更醒目 */
+      border-radius: 20px; /* 更大圆角 */
+      padding: 32px 24px; /* 增加内边距 */
+      max-width: 380px; /* 扩大宽度 */
+      width: 95%; /* 占满手机宽度 */
+      z-index: 1000; /* 提高层级，确保置顶 */
+      box-shadow: 0 10px 40px rgba(255, 215, 0, 0.6); /* 金色发光阴影 */
       text-align: center;
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹出动画 */
+    }
+    /* 弹窗弹出动画 */
+    @keyframes popIn {
+      0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
     }
     .achievement-modal-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
+      font-size: 72px; /* 放大图标 */
+      margin-bottom: 16px;
+      color: #121212; /* 图标深色，对比强烈 */
     }
     .achievement-modal-name {
-      font-size: 20px;
-      color: #ffd700;
-      margin-bottom: 8px;
+      font-size: 26px; /* 放大成就名称 */
+      color: #121212; /* 深色文字，更醒目 */
+      font-weight: bold;
+      margin-bottom: 12px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .achievement-modal-desc {
-      font-size: 14px;
-      color: #aaaaaa;
-      margin-bottom: 16px;
+      font-size: 18px; /* 放大描述文字 */
+      color: #1e1e1e; /* 深色描述，清晰可读 */
+      margin-bottom: 24px;
     }
     .achievement-modal-btn {
-      padding: 8px 24px;
-      background: #ffd700;
-      color: #121212;
+      padding: 12px 32px; /* 放大按钮 */
+      background: #121212; /* 深色按钮 */
+      color: #ffd700; /* 金色文字 */
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: bold;
+      font-size: 18px; /* 放大按钮文字 */
       cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .achievement-modal-btn:active {
+      transform: scale(0.95); /* 按钮按压反馈 */
     }
   </style>
 </head>
@@ -554,8 +569,8 @@
     <div id="achievementList"></div>
   </div>
 
-  <!-- ========== 新增：成就解锁弹窗 ========== -->
-  <div class="="achievement-modal hidden-cls" id="achievementModal">
+  <!-- ========== 成就解锁弹窗（DOM结构不变） ========== -->
+  <div class="achievement-modal hidden-cls" id="achievementModal">
     <div class="achievement-modal-icon">🏆</div>
     <h3 class="achievement-modal-name" id="modalAchievementName"></h3>
     <p class="achievement-modal-desc" id="modalAchievementDesc"></p>
@@ -593,8 +608,8 @@
         {id:5,text:'选出真的不是直男的人。',type:'single-key',correct:'宋',msgWin:'宋酱宋酱我们喜欢你❤️',msgLose:'好像也没错...',achievement:'deepWaterCity'},
         {id:6,text:'大富哥是哪位？',type:'single-key',correct:'朝南',msgWin:'朝哥请表演一下那个！💰💰💰',msgLose:'不，这位应该不会给你钱。',achievement:'goldCoin'},
         {id:7,text:'你好。请嬷——',type:'single-key',correct:'Adams',msgWin:'“我可是直男呀！”',msgLose:'诶？那也不错。'},
-        // 新增题目：id=8，答案=席勒，自定义正确/错误提示
-{id:8,text:'选择打人很痛的非逃犯。',type:'single-key',correct:'席勒',msgWin:'“您好。我在等我的神父。”',msgLose:'和我的.ra手枪说去吧',achievement:'forWorld'}
+        // 新增题目：id=8，答案=席勒，成就=forWorld
+        {id:8,text:'选择打人很痛的非逃犯。',type:'single-key',correct:'席勒',msgWin:'一拳超人席勒！',msgLose:'选错啦，席勒才是打人超痛的非逃犯～',achievement:'forWorld'}
       ],
       // 成就：新增2项成就
       achievements: {
